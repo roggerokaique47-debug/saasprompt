@@ -3,7 +3,7 @@ import db from '@prompthub/database/src/client';
 import { payouts } from '@prompthub/database/src/schema/payouts';
 import { sales } from '@prompthub/database/src/schema/sales';
 import { eq, desc, and, sql } from 'drizzle-orm';
-import { getCurrentCreator } from '@/features/creator/creator-actions';
+import { getCurrentCreator } from '@/features/creator';
 import { RequestPayoutButton } from './request-payout-button';
 
 export const dynamic = 'force-dynamic';

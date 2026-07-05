@@ -6,7 +6,7 @@ import { articles } from '@prompthub/database/src/schema/articles';
 import { workflows } from '@prompthub/database/src/schema/workflows';
 import { payouts } from '@prompthub/database/src/schema/payouts';
 import { count, desc, sql, sum, and, eq } from 'drizzle-orm';
-import { getCurrentCreator } from '@/features/creator/creator-actions';
+import { getCurrentCreator } from '@/features/creator';
 import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';

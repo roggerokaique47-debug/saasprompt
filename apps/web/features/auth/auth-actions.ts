@@ -4,10 +4,11 @@ import { revalidatePath } from 'next/cache';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import type { ActionResponse } from '@/types';
 
-export async function signUp(formData: FormData) {
+export async function signUp(formData: FormData): Promise<ActionResponse> {
   const supabase = await createClient();
-
+  
   const email = formData.get('email') as string;
   const password = formData.get('password') as string;
   const name = formData.get('name') as string;
@@ -28,7 +29,7 @@ export async function signUp(formData: FormData) {
   return { success: true };
 }
 
-export async function signIn(formData: FormData) {
+export async function signIn(formData: FormData): Promise<ActionResponse<{ redirectTo?: string }>> {
   const supabase = await createClient();
 
   const email = formData.get('email') as string;
@@ -68,7 +69,7 @@ export async function signInWithGoogle(): Promise<void> {
   }
 }
 
-export async function signOut() {
+export async function signOut(): Promise<void> {
   const supabase = await createClient();
   await supabase.auth.signOut();
   revalidatePath('/', 'layout');

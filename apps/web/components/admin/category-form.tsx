@@ -1,7 +1,7 @@
 'use client';
 
 import { useActionState } from 'react';
-import { createCategory } from './category-actions';
+import { createCategory } from '@/features/admin';
 
 export function CategoryForm() {
   const [state, formAction, pending] = useActionState(
