@@ -3,17 +3,10 @@
 import { revalidatePath } from 'next/cache';
 import db from '@prompthub/database/src/client';
 import { categories } from '@prompthub/database/src/schema/categories';
+import { slugify } from '@/utils';
+import type { ActionResponse } from '@/types';
 
-function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
-}
-
-export async function createCategory(formData: FormData) {
+export async function createCategory(formData: FormData): Promise<ActionResponse> {
   try {
     const name = formData.get('name') as string;
     const icon = formData.get('icon') as string;

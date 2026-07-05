@@ -3,7 +3,7 @@ import db from '@prompthub/database/src/client';
 import { categories } from '@prompthub/database/src/schema/categories';
 import { prompts } from '@prompthub/database/src/schema/prompts';
 import { eq, count } from 'drizzle-orm';
-import { CategoryForm } from '@/features/admin/category-form';
+import { CategoryForm } from '@/components/admin/category-form';
 
 export const dynamic = 'force-dynamic';
 

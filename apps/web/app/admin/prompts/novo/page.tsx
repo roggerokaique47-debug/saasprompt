@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import db from '@prompthub/database/src/client';
 import { categories } from '@prompthub/database/src/schema/categories';
-import { PromptForm } from '@/features/admin/prompt-form';
+import { PromptForm } from '@/components/admin/prompt-form';
 
 export const dynamic = 'force-dynamic';
 

@@ -4,7 +4,7 @@ import { eq } from 'drizzle-orm';
 import db from '@prompthub/database/src/client';
 import { prompts } from '@prompthub/database/src/schema/prompts';
 import { categories } from '@prompthub/database/src/schema/categories';
-import { PromptForm } from '@/features/admin/prompt-form';
+import { PromptForm } from '@/components/admin/prompt-form';
 
 export const metadata: Metadata = {
   title: 'Editar Prompt',

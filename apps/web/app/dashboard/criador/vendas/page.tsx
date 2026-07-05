@@ -3,7 +3,7 @@ import db from '@prompthub/database/src/client';
 import { sales } from '@prompthub/database/src/schema/sales';
 import { prompts } from '@prompthub/database/src/schema/prompts';
 import { eq, desc, sql } from 'drizzle-orm';
-import { getCurrentCreator } from '@/features/creator/creator-actions';
+import { getCurrentCreator } from '@/features/creator';
 
 export const dynamic = 'force-dynamic';
 

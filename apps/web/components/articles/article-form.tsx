@@ -1,6 +1,7 @@
 'use client';
 
 import { useActionState } from 'react';
+import { createArticle } from '@/features/articles';
 
 interface Category {
   id: string;
@@ -13,17 +14,7 @@ interface ArticleFormProps {
 
 export function ArticleForm({ categories }: ArticleFormProps) {
   const [state, formAction, pending] = useActionState(
-    async (_: unknown, formData: FormData) => {
-      try {
-        const res = await fetch('/api/content/articles', {
-          method: 'POST',
-          body: formData,
-        });
-        return await res.json();
-      } catch (e) {
-        return { error: String(e) };
-      }
-    },
+    async (_: unknown, formData: FormData) => createArticle(formData),
     null,
   );
 

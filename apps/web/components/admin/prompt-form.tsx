@@ -2,7 +2,7 @@
 
 import { useActionState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createPrompt, updatePrompt } from './prompt-actions';
+import { createPrompt, updatePrompt } from '@/features/admin';
 import type { PromptData } from '@prompthub/shared';
 
 interface Category {

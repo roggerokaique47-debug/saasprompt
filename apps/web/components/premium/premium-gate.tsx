@@ -1,4 +1,4 @@
-import { checkPurchase } from '@/features/purchase/actions';
+import { checkPurchase } from '@/features/purchase';
 import { BuyButton } from './buy-button';
 
 interface PremiumGateProps {

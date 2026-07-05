@@ -1,21 +1,12 @@
 'use client';
 
 import { useActionState, useRef } from 'react';
+import { createWorkflow } from '@/features/workflows';
 
 export function WorkflowForm() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [state, formAction, pending] = useActionState(
-    async (_: unknown, formData: FormData) => {
-      try {
-        const res = await fetch('/api/content/workflows', {
-          method: 'POST',
-          body: formData,
-        });
-        return await res.json();
-      } catch (e) {
-        return { error: String(e) };
-      }
-    },
+    async (_: unknown, formData: FormData) => createWorkflow(formData),
     null,
   );
 

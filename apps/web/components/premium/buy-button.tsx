@@ -1,7 +1,7 @@
 'use client';
 
 import { useActionState } from 'react';
-import { createContentCheckoutSession } from '@/features/purchase/actions';
+import { createContentCheckoutSession } from '@/features/purchase';
 
 export function BuyButton({
   contentType,
