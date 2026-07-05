@@ -1,0 +1,10 @@
+{
+  "framework": "nextjs",
+  "buildCommand": "cd ../.. && pnpm build --filter=@prompthub/web",
+  "outputDirectory": ".next",
+  "installCommand": "pnpm install",
+  "regions": ["gru1", "iad1", "lhr1"],
+  "github": {
+    "silent": true
+  }
+}

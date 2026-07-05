@@ -1,0 +1,21 @@
+[project]
+name = "prompthub"
+plan = "free"
+
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["https://*.vercel.app"]
+jwt_expiry = 3600
+email_confirmation_required = false
+
+[auth.external.google]
+enabled = true
+client_id = ""
+secret = ""
+
+[analytics]
+enabled = false
+
+[storage]
+enabled = true
