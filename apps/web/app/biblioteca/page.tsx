@@ -4,6 +4,7 @@ import db from '@prompthub/database/src/client';
 import { prompts } from '@prompthub/database/src/schema/prompts';
 import { categories } from '@prompthub/database/src/schema/categories';
 import { eq, ilike, or, and, desc, sql, count, type SQL } from 'drizzle-orm';
+import { SortSelect } from '@/components/sort-select';
 
 export const dynamic = 'force-dynamic';
 
@@ -146,20 +147,15 @@ export default async function BibliotecaPage({ searchParams }: PageProps) {
 
         <div className="flex items-center gap-2">
           <label className="text-sm text-muted-foreground">Ordenar:</label>
-          <select
-            className="rounded-lg border border-border bg-white px-3 py-2.5 text-sm outline-none"
-            onChange={(e) => {
-              const url = new URL(window.location.href);
-              url.searchParams.set('sort', e.target.value);
-              window.location.href = url.toString();
-            }}
+          <SortSelect
             defaultValue={sort}
-          >
-            <option value="relevance">RelevÃ¢ncia</option>
-            <option value="downloads">Downloads</option>
-            <option value="rating">AvaliaÃ§Ã£o</option>
-            <option value="newest">Novidades</option>
-          </select>
+            options={[
+              { value: 'relevance', label: 'Relevância' },
+              { value: 'downloads', label: 'Downloads' },
+              { value: 'rating', label: 'Avaliação' },
+              { value: 'newest', label: 'Novidades' },
+            ]}
+          />
         </div>
       </div>
 

@@ -6,6 +6,9 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ['lucide-react', '@radix-ui/react-*'],
   },
+  turbopack: {
+      root: '../../',
+  },
 };
 
 export default nextConfig;

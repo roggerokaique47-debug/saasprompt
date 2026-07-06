@@ -1,3 +1,8 @@
+import dotenv from 'dotenv';
+import path from 'path';
+
+dotenv.config({ path: path.resolve(__dirname, '../../../../.env') });
+
 import db from '../client';
 import { categories } from '../schema/categories';
 import { users } from '../schema/users';

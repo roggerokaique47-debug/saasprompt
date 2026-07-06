@@ -5,6 +5,7 @@ import { eq, desc, count, and } from 'drizzle-orm';
 import db from '@prompthub/database/src/client';
 import { categories } from '@prompthub/database/src/schema/categories';
 import { prompts } from '@prompthub/database/src/schema/prompts';
+import { SortSelect } from '@/components/sort-select';
 
 interface PageProps {
   params: Promise<{ categoria: string }>;
@@ -137,19 +138,14 @@ export default async function CategoriaPage({ params, searchParams }: PageProps)
         </p>
         <div className="flex items-center gap-2">
           <label className="text-sm text-muted-foreground">Ordenar:</label>
-          <select
-            className="rounded-lg border border-border bg-white px-3 py-2 text-sm outline-none"
+          <SortSelect
             defaultValue={sort}
-            onChange={(e) => {
-              const url = new URL(window.location.href);
-              url.searchParams.set('sort', e.target.value);
-              window.location.href = url.toString();
-            }}
-          >
-            <option value="downloads">Downloads</option>
-            <option value="rating">Avaliação</option>
-            <option value="newest">Novidades</option>
-          </select>
+            options={[
+              { value: 'downloads', label: 'Downloads' },
+              { value: 'rating', label: 'Avaliação' },
+              { value: 'newest', label: 'Novidades' },
+            ]}
+          />
         </div>
       </div>
 

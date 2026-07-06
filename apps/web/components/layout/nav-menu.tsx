@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
 
 const menuGroups = [
   {
@@ -51,29 +50,18 @@ const menuGroups = [
 ];
 
 export function NavMenu() {
-  const [open, setOpen] = useState<string | null>(null);
-
   return (
     <div className="hidden items-center gap-1 md:flex">
       {menuGroups.map((group) => (
-        <div
-          key={group.label}
-          className="relative"
-          onMouseEnter={() => setOpen(group.label)}
-          onMouseLeave={() => setOpen(null)}
-        >
+        <div key={group.label} className="group relative">
           <Link
             href={group.href}
-            className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition ${
-              open === group.label ? 'bg-muted text-primary' : 'hover:bg-muted'
-            }`}
+            className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition hover:bg-muted group-hover:bg-muted group-hover:text-primary"
           >
             <span>{group.icon}</span>
             {group.label}
             <svg
-              className={`h-3 w-3 transition-transform ${
-                open === group.label ? 'rotate-180' : ''
-              }`}
+              className="h-3 w-3 transition-transform group-hover:rotate-180"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -87,27 +75,26 @@ export function NavMenu() {
             </svg>
           </Link>
 
-          {open === group.label && (
-            <div className="absolute left-0 top-full z-50 mt-1 w-56 rounded-xl border border-border bg-white p-3 shadow-lg">
-              {group.subs.map((sub) => (
-                <Link
-                  key={sub.label}
-                  href={sub.href}
-                  className="block rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-primary"
-                >
-                  {sub.label}
-                </Link>
-              ))}
-              <div className="mt-2 border-t border-border pt-2">
-                <Link
-                  href={group.href}
-                  className="block rounded-lg px-3 py-2 text-sm font-medium text-primary hover:bg-muted"
-                >
-                  Ver todos →
-                </Link>
-              </div>
+          <div className="invisible absolute left-0 top-full z-50 mt-1 w-56 rounded-xl border border-border bg-white p-3 shadow-lg opacity-0 transition-opacity group-hover:visible group-hover:opacity-100">
+            <div className="absolute -top-1 left-0 right-0 h-1" />
+            {group.subs.map((sub) => (
+              <Link
+                key={sub.label}
+                href={sub.href}
+                className="block rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-primary"
+              >
+                {sub.label}
+              </Link>
+            ))}
+            <div className="mt-2 border-t border-border pt-2">
+              <Link
+                href={group.href}
+                className="block rounded-lg px-3 py-2 text-sm font-medium text-primary hover:bg-muted"
+              >
+                Ver todos →
+              </Link>
             </div>
-          )}
+          </div>
         </div>
       ))}
     </div>
