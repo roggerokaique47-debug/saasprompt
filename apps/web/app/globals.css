@@ -1,21 +1,27 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #6C5CE7;
+  /* NovaFlow AI Brand Colors - Premium SaaS Palette */
+  --color-primary: #0A84F8;
   --color-primary-foreground: #FFFFFF;
-  --color-secondary: #00CEC9;
+  --color-secondary: #5E5CE6;
   --color-secondary-foreground: #FFFFFF;
-  --color-accent: #FDCB6E;
-  --color-accent-foreground: #2D3436;
-  --color-background: #FAFAFA;
-  --color-foreground: #2D3436;
-  --color-muted: #B2BEC3;
-  --color-muted-foreground: #636E72;
-  --color-border: #DFE6E9;
-  --color-success: #00B894;
-  --color-error: #D63031;
-  --color-warning: #F39C12;
-
+  --color-accent: #FF6B6B;
+  --color-accent-foreground: #FFFFFF;
+  --color-background: #FFFFFF;
+  --color-foreground: #1A1A2E;
+  --color-muted: #F5F5FA;
+  --color-muted-foreground: #6B7280;
+  --color-border: #E5E7EB;
+  --color-success: #10B981;
+  --color-error: #EF4444;
+  --color-warning: #F59E0B;
+  --color-info: #3B82F6;
+  
+  /* Gradient Colors */
+  --color-gradient-start: #0A84F8;
+  --color-gradient-end: #5E5CE6;
+  
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 }
@@ -24,4 +30,59 @@ body {
   background: var(--color-background);
   color: var(--color-foreground);
   font-family: var(--font-sans);
+}
+
+/* Premium Animations */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(10, 132, 248, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(10, 132, 248, 0.6);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.6s ease-out forwards;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Glass morphism effect */
+.glass-effect {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, var(--color-gradient-start), var(--color-gradient-end));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Premium card hover */
+.premium-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.premium-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
 }

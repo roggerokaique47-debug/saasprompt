@@ -1,36 +1,17 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
-import { Header } from '@/components/layout/header';
-import { Footer } from '@/components/layout/footer';
 import './globals.css';
 
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-sans',
-});
+const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: {
-    default: 'PromptHub — Biblioteca de Prompts para IA',
-    template: '%s | PromptHub',
-  },
-  description:
-    'Encontre, copie e baixe prompts prontos para ChatGPT, Claude, Gemini e mais. A maior biblioteca inteligente de prompts de IA.',
-  keywords: [
-    'prompts',
-    'IA',
-    'ChatGPT',
-    'Claude',
-    'Gemini',
-    'biblioteca de prompts',
-    'prompt library',
-  ],
+  title: 'NovaFlow AI - Automatize sua Empresa com Inteligência Artificial',
+  description: 'Crie workflows, instale automações prontas ou contrate Funcionários de IA em poucos minutos. A plataforma completa de automação para negócios.',
+  keywords: ['automação', 'ia', 'workflow', 'agentes de ia', 'produtividade', 'novaflow', 'zapier alternative', 'n8n alternative'],
+  authors: [{ name: 'NovaFlow AI Team' }],
   openGraph: {
-    title: 'PromptHub — Biblioteca de Prompts para IA',
-    description:
-      'Encontre, copie e baixe prompts prontos para ChatGPT, Claude, Gemini e mais.',
-    siteName: 'PromptHub',
-    locale: 'pt_BR',
+    title: 'NovaFlow AI - Automatize qualquer processo da sua empresa',
+    description: 'Economize horas e dinheiro com automações inteligentes. Comece grátis.',
     type: 'website',
   },
 };
@@ -42,11 +23,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR" suppressHydrationWarning>
-      <body className={`${inter.variable} flex min-h-screen flex-col antialiased`}>
-        <Header />
-        <div className="flex-1">{children}</div>
-        <Footer />
-      </body>
+      <body className={inter.className}>{children}</body>
     </html>
   );
 }
