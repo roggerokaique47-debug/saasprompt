@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import PrecoPage from '@/app/preco/page';
+import PrecoPage from '@/app/(public)/preco/page';
 
 describe('PricingPage', () => {
   it('renders all plan names', () => {

@@ -8,6 +8,17 @@ export * from './creators';
 export * from './sales';
 export * from './subscriptions';
 export * from './articles';
+
 export * from './workflows';
 export * from './purchases';
 export * from './payouts';
+export * from './skills';
+export * from './agents';
+export * from './executions';
+export * from './node-logs';
+export * from './integrations';
+export * from './api_keys';
+export * from './workflow_reviews';
+export * from './leads';
+export * from './feedbacks';
+export * from './usage_logs';

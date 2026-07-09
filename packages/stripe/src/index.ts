@@ -26,6 +26,23 @@ export async function createCheckoutSession(params: {
   });
 }
 
+export async function createTokenCheckoutSession(params: {
+  userId: string;
+  priceId: string;
+  successUrl: string;
+  cancelUrl: string;
+}) {
+  return stripe.checkout.sessions.create({
+    mode: 'payment', // Compra avulsa de tokens
+    payment_method_types: ['card'],
+    line_items: [{ price: params.priceId, quantity: 1 }],
+    client_reference_id: params.userId,
+    success_url: params.successUrl,
+    cancel_url: params.cancelUrl,
+    metadata: { userId: params.userId, type: 'tokens' },
+  });
+}
+
 export async function createPortalSession(customerId: string, returnUrl: string) {
   return stripe.billingPortal.sessions.create({
     customer: customerId,

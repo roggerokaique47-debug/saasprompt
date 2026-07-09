@@ -42,7 +42,6 @@ export async function POST(request: Request) {
       slug: uniqueSlug,
       description: (formData.get('description') as string) || null,
       workflowJson,
-      n8nVersion: (formData.get('n8nVersion') as string) || '1.0',
       authorId: user.id,
       isPremium: formData.has('isPremium'),
       priceCents: Number(formData.get('priceCents')) || 0,

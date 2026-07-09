@@ -24,7 +24,7 @@ export const workflows = pgTable('workflows', {
   slug: text('slug').notNull().unique(),
   description: text('description'),
   workflowJson: jsonb('workflow_json').notNull(),
-  n8nVersion: text('n8n_version').default('1.0'),
+  isActive: boolean('is_active').default(true).notNull(),
   categoryId: uuid('category_id'),
   authorId: uuid('author_id').notNull(),
   isPremium: boolean('is_premium').default(false).notNull(),

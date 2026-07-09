@@ -9,6 +9,8 @@ import { users } from '../schema/users';
 import { prompts } from '../schema/prompts';
 import { articleCategories, articles } from '../schema/articles';
 import { workflowCategories, workflows } from '../schema/workflows';
+import { skillCategories, skills } from '../schema/skills';
+import { agentCategories, agents } from '../schema/agents';
 import { reviews } from '../schema/reviews';
 import { creators } from '../schema/creators';
 import { sales } from '../schema/sales';
@@ -17,6 +19,9 @@ import { collections, collectionPrompts } from '../schema/collections';
 import { purchases } from '../schema/purchases';
 import { payouts } from '../schema/payouts';
 import { eq, gt } from 'drizzle-orm';
+import { externalWorkflows, loadExternalWorkflowJson } from './workflow-imports';
+import { externalSkills, loadExternalSkillContent } from './skill-imports';
+import { externalAgents, loadExternalAgentContent } from './agent-imports';
 
 async function seed() {
   console.log('Seeding database...\n');
@@ -397,7 +402,123 @@ async function seed() {
       tags: w.tags as [string, ...string[]],
     }).onConflictDoNothing();
   }
-  console.log(`  ${workflowData.length} workflows criados`);
+  console.log(`  ${workflowData.length} workflows criados (inline)`);
+
+  // ─── EXTERNAL WORKFLOWS (open-source) ──────────────────
+  let extCount = 0;
+  for (const ext of externalWorkflows) {
+    const workflowJson = loadExternalWorkflowJson(ext.filename);
+    if (!workflowJson) continue;
+
+    await db.insert(workflows).values({
+      title: ext.title,
+      slug: ext.slug,
+      description: ext.description,
+      workflowJson,
+      categoryId: wcMap[ext.categorySlug]?.id,
+      authorId: admin!.id,
+      isPublished: true,
+      isPremium: ext.isPremium,
+      priceCents: ext.priceCents,
+      tags: ext.tags as [string, ...string[]],
+      downloads: Math.floor(Math.random() * 200) + 10,
+      views: Math.floor(Math.random() * 800) + 50,
+    }).onConflictDoNothing();
+    extCount++;
+  }
+  console.log(`  ${extCount} workflows importados de repositórios open-source`);
+
+  // ─── SKILL CATEGORIES ────────────────────────────────────
+  const scData = [
+    { name: 'Engenharia', slug: 'engenharia', icon: '💻' },
+    { name: 'DevOps', slug: 'devops', icon: '⚙️' },
+    { name: 'IA', slug: 'ia', icon: '🤖' },
+    { name: 'Design', slug: 'design', icon: '🎨' },
+    { name: 'Marketing', slug: 'marketing', icon: '📢' },
+    { name: 'Dados', slug: 'dados', icon: '📊' },
+    { name: 'Conteúdo', slug: 'conteudo', icon: '✍️' },
+  ];
+  for (const sc of scData) {
+    await db.insert(skillCategories).values(sc).onConflictDoNothing();
+  }
+  const scMap: Record<string, typeof skillCategories.$inferSelect> = {};
+  for (const sc of scData) {
+    const [row] = await db.select().from(skillCategories).where(eq(skillCategories.slug, sc.slug)).limit(1);
+    if (row) scMap[sc.slug] = row;
+  }
+  console.log(`  ${scData.length} categorias de skills criadas`);
+
+  // ─── EXTERNAL SKILLS ────────────────────────────────────
+  let skillCount = 0;
+  for (const ext of externalSkills) {
+    const content = loadExternalSkillContent(ext.filename);
+    if (!content) continue;
+
+    await db.insert(skills).values({
+      title: ext.title,
+      slug: ext.slug,
+      description: ext.description,
+      content,
+      platform: ext.platform as [string, ...string[]],
+      categoryId: scMap[ext.categorySlug]?.id,
+      authorId: admin!.id,
+      isPublished: true,
+      isPremium: ext.isPremium,
+      priceCents: ext.priceCents,
+      tags: ext.tags as [string, ...string[]],
+      source: ext.source,
+      downloads: Math.floor(Math.random() * 150) + 5,
+      views: Math.floor(Math.random() * 600) + 30,
+    }).onConflictDoNothing();
+    skillCount++;
+  }
+  console.log(`  ${skillCount} skills importadas de repositórios open-source`);
+
+  // ─── AGENT CATEGORIES ────────────────────────────────────
+  const acData2 = [
+    { name: 'Engenharia', slug: 'engenharia', icon: '💻' },
+    { name: 'DevOps', slug: 'devops', icon: '⚙️' },
+    { name: 'Design', slug: 'design', icon: '🎨' },
+    { name: 'Marketing', slug: 'marketing', icon: '📢' },
+    { name: 'Dados', slug: 'dados', icon: '📊' },
+    { name: 'Conteúdo', slug: 'conteudo', icon: '✍️' },
+  ];
+  for (const ac of acData2) {
+    await db.insert(agentCategories).values(ac).onConflictDoNothing();
+  }
+  const acMap2: Record<string, typeof agentCategories.$inferSelect> = {};
+  for (const ac of acData2) {
+    const [row] = await db.select().from(agentCategories).where(eq(agentCategories.slug, ac.slug)).limit(1);
+    if (row) acMap2[ac.slug] = row;
+  }
+  console.log(`  ${acData2.length} categorias de agents criadas`);
+
+  // ─── EXTERNAL AGENTS ────────────────────────────────────
+  let agentCount = 0;
+  for (const ext of externalAgents) {
+    const content = loadExternalAgentContent(ext.filename);
+    if (!content) continue;
+
+    await db.insert(agents).values({
+      title: ext.title,
+      slug: ext.slug,
+      description: ext.description,
+      content,
+      platform: ext.platform as [string, ...string[]],
+      categoryId: acMap2[ext.categorySlug]?.id,
+      authorId: admin!.id,
+      isPublished: true,
+      isPremium: ext.isPremium,
+      priceCents: ext.priceCents,
+      tags: ext.tags as [string, ...string[]],
+      source: ext.source,
+      color: ext.color,
+      downloads: Math.floor(Math.random() * 200) + 10,
+      views: Math.floor(Math.random() * 800) + 50,
+    }).onConflictDoNothing();
+    agentCount++;
+  }
+  console.log(`  ${agentCount} agents importados de repositórios open-source`);
 
   // ─── COLLECTIONS ─────────────────────────────────────────
   const [collection] = await db.insert(collections).values({

@@ -28,23 +28,23 @@ vi.mock('@prompthub/database/src/client', () => ({
   },
 }));
 
-import HomePage from '@/app/page';
+import Home from '@/app/(public)/page';
 
 describe('HomePage', () => {
   it('renders the hero heading', async () => {
-    const Component = await HomePage();
+    const Component = await Home();
     render(Component);
     expect(screen.getByText(/Biblioteca de Prompts/i)).toBeInTheDocument();
   });
 
   it('renders explorar button', async () => {
-    const Component = await HomePage();
+    const Component = await Home();
     render(Component);
     expect(screen.getAllByText('Explorar Biblioteca').length).toBeGreaterThanOrEqual(1);
   });
 
   it('renders CTA section', async () => {
-    const Component = await HomePage();
+    const Component = await Home();
     render(Component);
     expect(screen.getByText('Cadastre-se Grátis')).toBeInTheDocument();
   });

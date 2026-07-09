@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
-import { Header } from '@/components/layout/header';
-import { Footer } from '@/components/layout/footer';
+// Imports removed
 import './globals.css';
 
 const inter = Inter({
@@ -11,29 +10,28 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: 'PromptHub — Biblioteca de Prompts para IA',
-    template: '%s | PromptHub',
+    default: 'NovaFlow AI — Plataforma de Automação com IA',
+    template: '%s | NovaFlow AI',
   },
   description:
-    'Encontre, copie e baixe prompts prontos para ChatGPT, Claude, Gemini e mais. A maior biblioteca inteligente de prompts de IA.',
+    'Automatize qualquer processo da sua empresa com IA. Crie workflows, instale automações prontas ou contrate Funcionários de IA em poucos minutos.',
   keywords: [
-    'prompts',
-    'IA',
-    'ChatGPT',
-    'Claude',
-    'Gemini',
-    'biblioteca de prompts',
-    'prompt library',
+    'automação', 'IA', 'workflows', 'n8n', 'zapier',
+    'funcionários de IA', 'automação empresarial', 'NovaFlow',
+    'agentes de ia', 'produtividade',
   ],
+  authors: [{ name: 'NovaFlow AI Team' }],
   openGraph: {
-    title: 'PromptHub — Biblioteca de Prompts para IA',
+    title: 'NovaFlow AI — Automatize qualquer processo da sua empresa',
     description:
-      'Encontre, copie e baixe prompts prontos para ChatGPT, Claude, Gemini e mais.',
-    siteName: 'PromptHub',
+      'Economize horas e dinheiro com automações inteligentes. Crie workflows, instale automações prontas ou contrate Funcionários de IA.',
+    siteName: 'NovaFlow AI',
     locale: 'pt_BR',
     type: 'website',
   },
 };
+
+import { ThemeProvider } from '@/components/theme-provider';
 
 export default function RootLayout({
   children,
@@ -42,10 +40,15 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR" suppressHydrationWarning>
-      <body className={`${inter.variable} flex min-h-screen flex-col antialiased`}>
-        <Header />
-        <div className="flex-1">{children}</div>
-        <Footer />
+      <body className={`${inter.variable} flex min-h-screen flex-col antialiased bg-background text-foreground`}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );
