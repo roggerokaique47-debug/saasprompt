@@ -1,4 +1,4 @@
-# PROJECT_AUDIT.md
+# 03_ARCHITECTURE (v1.0 FROZEN)
 
 ## 1. Estrutura completa do projeto
 Aqui está a árvore do monorepo (ignorando pastas de build, node_modules, .git, etc):

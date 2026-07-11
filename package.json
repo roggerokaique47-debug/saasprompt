@@ -17,9 +17,11 @@
     "db:push": "pnpm --filter @prompthub/database db:push",
     "db:migrate": "pnpm --filter @prompthub/database db:migrate",
     "db:seed": "pnpm --filter @prompthub/database db:seed",
-    "db:studio": "pnpm --filter @prompthub/database db:studio"
+    "db:studio": "pnpm --filter @prompthub/database db:studio",
+    "prepare": "husky"
   },
   "devDependencies": {
+    "husky": "^9.1.7",
     "prettier": "^3.9.4",
     "turbo": "^2.10.3",
     "typescript": "^6.0.3"

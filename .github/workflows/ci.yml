@@ -90,9 +90,26 @@ jobs:
           path: apps/web/playwright-report/
           retention-days: 7
 
+  performance:
+    name: Load Tests (K6)
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install K6
+        run: |
+          sudo gpg -k
+          sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install k6
+      - name: Run K6 Load Test
+        run: k6 run tests/load/k6-engine.js
+
   deploy:
     name: Deploy to Vercel
-    needs: [quality, test, build, e2e]
+    needs: [quality, test, build, e2e, performance]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     timeout-minutes: 15

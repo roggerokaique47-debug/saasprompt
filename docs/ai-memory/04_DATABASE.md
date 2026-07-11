@@ -1,4 +1,4 @@
-# REFERÊNCIA DE BANCO DE DADOS (04_DATABASE.md)
+# REFERÊNCIA DE BANCO DE DADOS (v1.0 FROZEN)
 
 **Tecnologia:** Supabase (PostgreSQL) + Drizzle ORM (`packages/database`)
 **Conexão:** Pooling nativo gerenciado pelo Supabase.

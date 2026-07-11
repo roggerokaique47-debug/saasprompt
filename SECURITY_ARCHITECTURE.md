@@ -1,4 +1,4 @@
-# 🛡️ NovaFlow AI - Constituição de Segurança (Security Architecture)
+# 🛡️ NovaFlow AI - Constituição de Segurança (v1.0 FROZEN)
 
 Este documento não é apenas informativo; ele é **normativo**. É a Constituição de Segurança do NovaFlow AI. 
 

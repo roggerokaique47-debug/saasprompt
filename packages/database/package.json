@@ -20,7 +20,7 @@
     "uuid": "^14.0.1"
   },
   "devDependencies": {
-    "@types/node": "^26.1.0",
+    "@types/node": "^26.1.1",
     "@types/uuid": "^11.0.0",
     "drizzle-kit": "^0.31.10",
     "tsx": "^4.23.0",
