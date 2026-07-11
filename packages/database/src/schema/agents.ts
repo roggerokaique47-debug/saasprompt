@@ -9,6 +9,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { relations, sql } from 'drizzle-orm';
 import { users } from './users';
+import { organizations } from './organizations';
 
 export const agentCategories = pgTable('agent_categories', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -27,6 +28,7 @@ export const agents = pgTable('agents', {
   platform: text('platform').array().notNull().default(sql`'{"claude","cursor"}'`),
   categoryId: uuid('category_id'),
   authorId: uuid('author_id').notNull(),
+  organizationId: uuid('organization_id').notNull(), // <- NEW
   isPremium: boolean('is_premium').default(false).notNull(),
   priceCents: integer('price_cents').default(0).notNull(),
   isPublished: boolean('is_published').default(false).notNull(),
@@ -48,5 +50,9 @@ export const agentsRelations = relations(agents, ({ one }) => ({
   author: one(users, {
     fields: [agents.authorId],
     references: [users.id],
+  }),
+  organization: one(organizations, {
+    fields: [agents.organizationId],
+    references: [organizations.id],
   }),
 }));

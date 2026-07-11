@@ -1,172 +1,124 @@
 import { v4 as uuidv4 } from 'uuid';
 import db from './client';
 import { workflows } from './schema/workflows';
+import { organizations } from './schema/organizations';
 
 const realWorkflows = [
   {
-    title: 'Anthropic / Documentação e PDF',
-    slug: 'anthropic-pdf-docs',
-    description: 'Extraia texto de PDFs e gere documentação de forma automatizada com a API da Anthropic.',
-    isPublished: true,
-    isPremium: true,
-    priceCents: 4900,
-    downloads: 12543,
-    tags: ['Documentos', 'IA', 'Anthropic'],
-    nodes: [],
-    edges: [],
-  },
-  {
-    title: 'Stripe / Best Practices',
-    slug: 'stripe-best-practices',
-    description: 'Workflows de boas práticas para integração de pagamentos e assinaturas com Stripe.',
+    title: 'Atendimento via WhatsApp (NovaFlow)',
+    slug: 'atendimento-whatsapp',
+    description: 'Automatize todo o seu funil de atendimento e suporte utilizando a inteligência artificial integrada ao WhatsApp. Responda clientes 24/7 de forma humana e rápida.',
     isPublished: true,
     isPremium: false,
     priceCents: 0,
-    downloads: 9234,
-    tags: ['Pagamentos', 'Financeiro'],
+    downloads: 4532,
+    tags: ['WhatsApp', 'Atendimento', 'IA'],
     nodes: [],
     edges: [],
   },
   {
-    title: 'Vercel / Next.js Workflow',
-    slug: 'vercel-nextjs-workflow',
-    description: 'Automatize upgrades de versão e deploy no ecossistema Vercel e Next.js.',
-    isPublished: true,
-    isPremium: false,
-    priceCents: 0,
-    downloads: 15123,
-    tags: ['Deploy', 'Frontend', 'Vercel'],
-    nodes: [],
-    edges: [],
-  },
-  {
-    title: 'Cloudflare / Edge SDK',
-    slug: 'cloudflare-edge-sdk',
-    description: 'Gerencie Workers, Durable Objects e KV na edge do Cloudflare de forma inteligente.',
-    isPublished: true,
-    isPremium: true,
-    priceCents: 2900,
-    downloads: 11345,
-    tags: ['Edge', 'DevOps', 'Cloudflare'],
-    nodes: [],
-    edges: [],
-  },
-  {
-    title: 'Hugging Face / Vision Trainer',
-    slug: 'huggingface-vision-trainer',
-    description: 'Treine modelos de visão computacional na infraestrutura do Hugging Face.',
+    title: 'Automação de Marketing (NovaFlow)',
+    slug: 'automacao-marketing',
+    description: 'Crie campanhas dinâmicas que adaptam a comunicação com o lead dependendo do engajamento dele, maximizando a sua taxa de conversão.',
     isPublished: true,
     isPremium: true,
     priceCents: 9900,
-    downloads: 14210,
-    tags: ['IA', 'Machine Learning'],
+    downloads: 1245,
+    tags: ['Marketing', 'Vendas', 'Automação'],
     nodes: [],
     edges: [],
   },
   {
-    title: 'Google / Gemini API Dev',
-    slug: 'google-gemini-api',
-    description: 'Acesse o poder do Google Gemini para processamento multimodal e análise avançada.',
+    title: 'Automação de Suporte Técnico (NovaFlow)',
+    slug: 'automacao-suporte',
+    description: 'Reduza a fila de chamados técnicos utilizando agentes de IA treinados na sua própria base de conhecimento. Resolve dúvidas frequentes automaticamente.',
     isPublished: true,
     isPremium: false,
     priceCents: 0,
-    downloads: 22100,
-    tags: ['IA', 'Google', 'GenAI'],
+    downloads: 8740,
+    tags: ['Suporte', 'Helpdesk'],
     nodes: [],
     edges: [],
   },
   {
-    title: 'Supabase / Postgres Optimization',
-    slug: 'supabase-postgres-optimization',
-    description: 'Skill para otimizar queries e configurações de banco de dados no Supabase.',
-    isPublished: true,
-    isPremium: false,
-    priceCents: 0,
-    downloads: 18456,
-    tags: ['Database', 'Supabase'],
-    nodes: [],
-    edges: [],
-  },
-  {
-    title: 'Sentry / Fix Issues',
-    slug: 'sentry-fix-issues',
-    description: 'Automação para revisar e corrigir erros monitorados pelo Sentry com IA.',
+    title: 'Automação de Vendas (NovaFlow)',
+    slug: 'automacao-vendas',
+    description: 'Qualifique leads e faça follow-up ativo de oportunidades comerciais, integrando seu CRM e acelerando o fechamento.',
     isPublished: true,
     isPremium: true,
-    priceCents: 1900,
-    downloads: 10567,
-    tags: ['Monitoramento', 'DevOps'],
+    priceCents: 14900,
+    downloads: 310,
+    tags: ['Vendas', 'CRM', 'IA'],
     nodes: [],
     edges: [],
   },
   {
-    title: 'Trail of Bits / Security Audit',
-    slug: 'trail-of-bits-security',
-    description: 'Efetue varreduras de segurança em repositórios para achar vulnerabilidades.',
+    title: 'Recuperação de Vendas e Carrinhos (NovaFlow)',
+    slug: 'recuperacao-vendas',
+    description: 'Detecte carrinhos abandonados ou compras não concluídas e acione os clientes de imediato com ofertas para concluir a venda.',
     isPublished: true,
     isPremium: true,
-    priceCents: 15900,
-    downloads: 4500,
-    tags: ['Segurança', 'Auditoria'],
+    priceCents: 7900,
+    downloads: 985,
+    tags: ['Vendas', 'E-commerce', 'Recuperação'],
     nodes: [],
     edges: [],
   },
   {
-    title: 'Neon / Postgres Serverless',
-    slug: 'neon-postgres',
-    description: 'Configure branches de banco de dados instantâneos no Neon Postgres.',
+    title: 'Integração Google Sheets',
+    slug: 'google-sheets-sync',
+    description: 'Sincronize respostas e leads capturados pelo NovaFlow diretamente em planilhas do Google Sheets em tempo real.',
     isPublished: true,
     isPremium: false,
     priceCents: 0,
-    downloads: 6780,
-    tags: ['Database', 'Serverless'],
+    downloads: 5012,
+    tags: ['Integrações', 'Google'],
     nodes: [],
     edges: [],
   },
   {
-    title: 'Remotion / Video Gen',
-    slug: 'remotion-video',
-    description: 'Gere vídeos programaticamente baseados em templates React.',
+    title: 'Integração Shopify',
+    slug: 'shopify-sync',
+    description: 'Conecte sua loja Shopify para que a IA consiga recomendar produtos e enviar links de checkout direto pelo chat.',
     isPublished: true,
     isPremium: true,
-    priceCents: 4500,
-    downloads: 8900,
-    tags: ['Vídeo', 'React'],
+    priceCents: 4900,
+    downloads: 1102,
+    tags: ['E-commerce', 'Shopify'],
     nodes: [],
     edges: [],
-  },
-  {
-    title: 'Typefully / Social Poster',
-    slug: 'typefully-social',
-    description: 'Agende e otimize posts para X (Twitter), LinkedIn e Bluesky usando IA.',
-    isPublished: true,
-    isPremium: false,
-    priceCents: 0,
-    downloads: 19200,
-    tags: ['Marketing', 'Social'],
-    nodes: [],
-    edges: [],
-  },
+  }
 ];
 
 async function seed() {
-  console.log('🌱 Iniciando seed de workflows com dados reais...');
+  console.log('🌱 Iniciando seed de workflows do NovaFlow AI com dados reais...');
 
   try {
+    const orgId = uuidv4();
+    await db.insert(organizations).values({
+      id: orgId,
+      name: 'Default NovaFlow Org',
+      slug: 'default-novaflow-org-' + orgId.substring(0, 8),
+      ownerId: uuidv4(), // just a dummy owner for seed
+      credits: 100,
+    }).onConflictDoNothing();
+
     for (const wf of realWorkflows) {
-      const userId = uuidv4();
+      const authorId = uuidv4();
+      
+      const { nodes, edges, ...restWf } = wf;
 
       await db.insert(workflows).values({
         id: uuidv4(),
-        userId: userId,
-        ...wf,
-        nodes: wf.nodes as any,
-        edges: wf.edges as any,
+        authorId: authorId,
+        organizationId: orgId,
+        ...restWf,
+        workflowJson: { nodes, edges } as any,
       });
       console.log(`✅ Inserido: ${wf.title}`);
     }
 
-    console.log('🎉 Seed completo!');
+    console.log('🎉 Seed do NovaFlow concluído com sucesso!');
   } catch (error) {
     console.error('❌ Erro no seed:', error);
   } finally {

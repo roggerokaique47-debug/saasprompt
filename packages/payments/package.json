@@ -10,11 +10,14 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@prompthub/database": "workspace:*",
     "@prompthub/shared": "workspace:*",
     "@prompthub/stripe": "workspace:*",
+    "drizzle-orm": "^0.40.0",
     "stripe": "^22.3.0"
   },
   "devDependencies": {
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.9"
   }
 }

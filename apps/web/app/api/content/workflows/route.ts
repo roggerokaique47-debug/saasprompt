@@ -37,7 +37,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'JSON inválido' }, { status: 400 });
     }
 
+    // Obter ou criar org do usuário
+    const { organizations } = await import('@prompthub/database/src/schema/organizations');
+    const { eq } = await import('drizzle-orm');
+    let [org] = await db.select().from(organizations).where(eq(organizations.ownerId, user.id)).limit(1);
+    if (!org) {
+      [org] = await db.insert(organizations).values({
+        name: 'My Workspace',
+        slug: `workspace-${user.id.slice(0, 8)}`,
+        ownerId: user.id,
+      }).returning();
+    }
+
     await db.insert(workflows).values({
+      organizationId: org.id,
       title,
       slug: uniqueSlug,
       description: (formData.get('description') as string) || null,

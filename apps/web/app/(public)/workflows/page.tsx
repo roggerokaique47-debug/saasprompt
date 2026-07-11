@@ -1,200 +1,100 @@
-import type { Metadata } from 'next';
-import Link from 'next/link';
-import { desc, eq, count, and, sql } from 'drizzle-orm';
-import db from '@prompthub/database/src/client';
-import { workflows } from '@prompthub/database/src/schema/workflows';
-import { AdBanner, AdSidebar } from '@/components/ads/ad-banner';
-import { SortSelect } from '@/components/sort-select';
+"use client";
 
-export const dynamic = 'force-dynamic';
+import { useState } from "react";
+import Link from "next/link";
+import "./workflows.css";
 
-export const metadata: Metadata = {
-  title: 'Workflows Prontos',
-  description: 'Automações prontas para NovaFlow AI. Use workflows de integração, automação e mais.',
-};
+const WORKFLOWS = [
+  { title: 'Atendimento WhatsApp 24h', cat: 'whatsapp', desc: 'Agente IA que responde clientes, agenda e qualifica leads automaticamente.', downloads: '2.4k' },
+  { title: 'Recuperação de Carrinho', cat: 'vendas', desc: 'Dispara WhatsApp 5 min após abandono de carrinho. Compatível com Shopify, Hotmart.', downloads: '1.8k' },
+  { title: 'Nutrição de Leads por E-mail', cat: 'marketing', desc: 'Sequência automática de e-mails com IA que personaliza cada mensagem.', downloads: '1.2k' },
+  { title: 'Suporte N1 com IA', cat: 'suporte', desc: 'Responde 80% das perguntas frequentes automaticamente. Transfere para humano quando necessário.', downloads: '3.1k' },
+  { title: 'Cobrança por WhatsApp', cat: 'financeiro', desc: 'Envia lembretes de boleto/PIX vencido com link de pagamento.', downloads: '970' },
+  { title: 'Agendamento Google Calendar', cat: 'vendas', desc: 'Cliente agenda consulta pelo WhatsApp. IA verifica disponibilidade e confirma.', downloads: '1.5k' },
+  { title: 'Pós-venda Inteligente', cat: 'vendas', desc: 'Após compra, envia pesquisa de satisfação, cupom de desconto e monitora NPS.', downloads: '680' },
+  { title: 'Moderação de Comunidade', cat: 'suporte', desc: 'Monitora grupos de WhatsApp e Telegram. Filtra spam e responde dúvidas comuns.', downloads: '520' },
+  { title: 'Lead Capture WhatsApp', cat: 'marketing', desc: 'Captura leads que enviam "quero saber mais" no WhatsApp e adiciona ao CRM.', downloads: '2.0k' },
+];
 
-const ITEMS_PER_PAGE = 12;
+export default function WorkflowsPage() {
+  const [filter, setFilter] = useState("all");
+  const [query, setQuery] = useState("");
 
-interface PageProps {
-  searchParams: Promise<{ tag?: string; sort?: string; page?: string }>;
-}
-
-export default async function WorkflowsPage({ searchParams }: PageProps) {
-  const sp = await searchParams;
-  const tag = sp.tag || '';
-  const sort = sp.sort || 'downloads';
-  const currentPage = Math.max(1, Number(sp.page) || 1);
-
-  const conditions = [eq(workflows.isPublished, true)];
-  if (tag) conditions.push(eq(workflows.tags, [tag]));
-
-  const orderBy = sort === 'newest'
-    ? desc(workflows.createdAt)
-    : desc(workflows.downloads);
-
-  const offset = (currentPage - 1) * ITEMS_PER_PAGE;
-
-  const [allWorkflows, totalResult] = await Promise.all([
-    db
-      .select()
-      .from(workflows)
-      .where(and(...conditions))
-      .orderBy(orderBy)
-      .limit(ITEMS_PER_PAGE)
-      .offset(offset),
-    db
-      .select({ total: count() })
-      .from(workflows)
-      .where(and(...conditions)),
-  ]);
-
-  const total = totalResult[0]?.total ?? 0;
-
-  const allTags = [...new Set(allWorkflows.flatMap((w) => w.tags ?? []))];
+  const filteredWorkflows = WORKFLOWS.filter((w) => {
+    const matchFilter = filter === "all" || w.cat === filter;
+    const matchQuery = !query || w.title.toLowerCase().includes(query.toLowerCase()) || w.desc.toLowerCase().includes(query.toLowerCase());
+    return matchFilter && matchQuery;
+  });
 
   return (
-    <main className="min-h-screen bg-background">
-      {/* Hero Section Local */}
-      <div className="relative overflow-hidden bg-zinc-950 px-4 py-16 text-zinc-50 dark:bg-zinc-950">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/20 via-zinc-950 to-zinc-950"></div>
-        <div className="relative mx-auto max-w-7xl text-center">
-          <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl">
-            Marketplace de <span className="text-primary">Automações</span>
-          </h1>
-          <p className="mx-auto mt-4 max-w-2xl text-lg text-zinc-400">
-            Descubra fluxos prontos e Agentes de IA construídos pela comunidade e verificados pelos nossos engenheiros. Instale em 1 clique.
+    <main>
+      <section className="page-hero">
+        <div className="container">
+          <p className="eyebrow fade-up" data-i18n="wf_eyebrow">WORKFLOWS PRONTOS</p>
+          <h1 className="fade-up" data-i18n="wf_title">Automações prontas para usar</h1>
+          <p className="lead fade-up" data-i18n="wf_desc">
+            Dezenas de workflows de IA para WhatsApp, CRM, e-mail e muito mais. Importe e adapte em segundos.
           </p>
         </div>
-      </div>
+      </section>
 
-      <div className="mx-auto max-w-7xl px-4 py-8">
-        <AdBanner className="mb-8 rounded-xl border border-border shadow-sm" />
+      <section className="section">
+        <div className="container">
+          <div className="search-bar fade-up">
+            <span style={{ color: "var(--muted)" }}>🔍</span>
+            <input 
+              type="search" 
+              placeholder="Buscar workflows..." 
+              data-i18n="wf_search_placeholder" 
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+          </div>
+          <div className="filter-bar fade-up">
+            <button className={`filter-btn ${filter === "all" ? "active" : ""}`} onClick={() => setFilter("all")} data-i18n="wf_all">Todos</button>
+            <button className={`filter-btn ${filter === "whatsapp" ? "active" : ""}`} onClick={() => setFilter("whatsapp")}>WhatsApp</button>
+            <button className={`filter-btn ${filter === "vendas" ? "active" : ""}`} onClick={() => setFilter("vendas")}>Vendas</button>
+            <button className={`filter-btn ${filter === "marketing" ? "active" : ""}`} onClick={() => setFilter("marketing")}>Marketing</button>
+            <button className={`filter-btn ${filter === "suporte" ? "active" : ""}`} onClick={() => setFilter("suporte")}>Suporte</button>
+            <button className={`filter-btn ${filter === "financeiro" ? "active" : ""}`} onClick={() => setFilter("financeiro")}>Financeiro</button>
+          </div>
 
-        <div className="flex flex-col gap-8 lg:flex-row">
-          {/* Sidebar */}
-          <aside className="w-full shrink-0 lg:w-64">
-            <div className="sticky top-24 space-y-6">
-              <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
-                <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                  Categorias
-                </h3>
-                <div className="space-y-1">
-                  <Link
-                    href="/workflows"
-                    className={`block rounded-lg px-3 py-2 text-sm transition-colors ${!tag ? 'bg-primary/10 font-medium text-primary' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}
-                  >
-                    Todas as Automações
-                  </Link>
-                  {allTags.map((t) => (
-                    <Link
-                      key={t}
-                      href={`/workflows?tag=${t}`}
-                      className={`block rounded-lg px-3 py-2 text-sm transition-colors ${tag === t ? 'bg-primary/10 font-medium text-primary' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}
-                    >
-                      {t}
-                    </Link>
-                  ))}
+          <div className="wf-grid">
+            {filteredWorkflows.map((w, idx) => (
+              <div key={idx} className="wf-card fade-up">
+                <div className="wf-card-img">
+                  <span>⚙️</span>
+                </div>
+                <div className="wf-card-body">
+                  <div className="wf-tags">
+                    <span className="wf-tag">{w.cat.toUpperCase()}</span>
+                  </div>
+                  <h3>{w.title}</h3>
+                  <p>{w.desc}</p>
+                  <div className="wf-meta">
+                    <span>⬇ {w.downloads} downloads</span>
+                  </div>
+                  <Link href="/cadastro" className="btn btn-secondary">Usar Workflow</Link>
                 </div>
               </div>
-
-              <AdSidebar className="rounded-xl border border-border shadow-sm" />
-            </div>
-          </aside>
-
-          {/* Conteúdo Principal */}
-          <div className="flex-1">
-            <div className="mb-6 flex items-center justify-between rounded-xl border border-border bg-card p-4 shadow-sm">
-              <p className="text-sm font-medium text-muted-foreground">
-                Exibindo <span className="text-foreground">{total}</span> automaç{total !== 1 ? 'ões' : 'ão'}
-              </p>
-              <div className="flex items-center gap-3">
-                <label className="text-sm font-medium text-muted-foreground">Ordenar por:</label>
-                <SortSelect
-                  defaultValue={sort}
-                  options={[
-                    { value: 'downloads', label: 'Mais Baixados' },
-                    { value: 'newest', label: 'Lançamentos' },
-                  ]}
-                />
-              </div>
-            </div>
-
-            {allWorkflows.length === 0 ? (
-              <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-card/50 py-24 text-center">
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-                  <span className="text-xl">🔍</span>
-                </div>
-                <h3 className="text-xl font-semibold">Nenhuma automação encontrada</h3>
-                <p className="mt-2 max-w-sm text-sm text-muted-foreground">
-                  Ninguém publicou uma automação com essa categoria ainda. Seja o primeiro!
-                </p>
-                <Link
-                  href="/workflows/novo"
-                  className="mt-6 rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground transition-transform hover:scale-105"
-                >
-                  Criar Workflow
-                </Link>
-              </div>
-            ) : (
-              <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-                {allWorkflows.map((wf) => (
-                  <Link
-                    key={wf.id}
-                    href={`/workflows/${wf.slug}`}
-                    className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-border bg-card p-6 shadow-sm transition-all hover:-translate-y-1 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5"
-                  >
-                    <div>
-                      <div className="mb-4 flex items-start justify-between">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-                        </div>
-                        {wf.isPremium ? (
-                          <span className="flex items-center gap-1 rounded-full bg-amber-500/10 px-2.5 py-1 text-xs font-bold text-amber-600 dark:text-amber-400">
-                            PRO ${(wf.priceCents / 100).toFixed(2)}
-                          </span>
-                        ) : (
-                          <span className="flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                            GRÁTIS
-                          </span>
-                        )}
-                      </div>
-                      <h3 className="mb-2 line-clamp-1 font-bold tracking-tight text-foreground group-hover:text-primary transition-colors">
-                        {wf.title}
-                      </h3>
-                      <p className="mb-4 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
-                        {wf.description}
-                      </p>
-                    </div>
-
-                    <div className="mt-4">
-                      <div className="mb-4 flex flex-wrap gap-2">
-                        {wf.tags?.slice(0, 2).map((t) => (
-                          <span
-                            key={t}
-                            className="rounded-md bg-muted px-2 py-1 text-xs font-medium text-muted-foreground"
-                          >
-                            {t}
-                          </span>
-                        ))}
-                      </div>
-                      <div className="flex items-center justify-between border-t border-border pt-4">
-                        <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
-                          {wf.downloads} installs
-                        </div>
-                        <span className="text-sm font-semibold text-primary opacity-0 transition-opacity group-hover:opacity-100">
-                          Instalar &rarr;
-                        </span>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
+            ))}
           </div>
         </div>
-      </div>
+      </section>
+
+      <section className="section section-alt" style={{ textAlign: "center" }}>
+        <div className="container">
+          <h2 className="h2 fade-up" data-i18n="wf_cta_title">Não encontrou o que precisa?</h2>
+          <p className="lead fade-up" style={{ margin: "var(--gap-md) auto" }} data-i18n="wf_cta_desc">
+            Crie seu próprio workflow do zero com nosso construtor visual. É mais fácil do que parece.
+          </p>
+          <div className="hero-cta fade-up">
+            <Link href="/cadastro" className="btn btn-primary btn-glow btn-arrow" data-i18n="wf_cta_btn">
+              Criar workflow grátis
+            </Link>
+          </div>
+        </div>
+      </section>
     </main>
   );
 }
-

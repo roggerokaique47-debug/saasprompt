@@ -6,11 +6,11 @@ import {
   boolean,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
-import { users } from './users';
+import { organizations } from './organizations';
 
 export const apiKeys = pgTable('api_keys', {
   id: uuid('id').defaultRandom().primaryKey(),
-  userId: uuid('user_id').notNull(),
+  organizationId: uuid('organization_id').notNull(),
   name: text('name').notNull(),
   keyHash: text('key_hash').notNull().unique(), // O hash da chave, para não salvar em plain text
   lastUsedAt: timestamp('last_used_at'),
@@ -19,8 +19,8 @@ export const apiKeys = pgTable('api_keys', {
 });
 
 export const apiKeysRelations = relations(apiKeys, ({ one }) => ({
-  user: one(users, {
-    fields: [apiKeys.userId],
-    references: [users.id],
+  organization: one(organizations, {
+    fields: [apiKeys.organizationId],
+    references: [organizations.id],
   }),
 }));

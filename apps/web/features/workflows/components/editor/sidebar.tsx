@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Webhook, Send, Zap, Clock, GitMerge, Filter, MessageSquare, Mail } from 'lucide-react';
+import { Webhook, Send, Zap, Clock, GitMerge, Filter, MessageSquare, Mail, FileText } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 
 const NODE_TYPES = [
@@ -13,6 +13,11 @@ const NODE_TYPES = [
   { type: 'discord_send', label: 'Discord Message', icon: MessageSquare, color: 'text-indigo-500' },
   { type: 'email_smtp', label: 'Send Email', icon: Mail, color: 'text-sky-500' },
   { type: 'whatsapp_send', label: 'Enviar WhatsApp', icon: MessageSquare, color: 'text-green-500' },
+  { type: 'gmail_send', label: 'Enviar Email (Gmail)', icon: Mail, color: 'text-red-500' },
+  { type: 'gmail_read', label: 'Ler Email (Gmail)', icon: Mail, color: 'text-red-500' },
+  { type: 'google_sheets_write', label: 'Editar Planilha', icon: FileText, color: 'text-green-600' },
+  { type: 'google_sheets_read', label: 'Ler Planilha', icon: FileText, color: 'text-green-600' },
+  { type: 'google_drive_upload', label: 'Upload Drive', icon: FileText, color: 'text-blue-500' },
   { type: 'filter', label: 'Filter', icon: Filter, color: 'text-slate-500' },
   { type: 'merge', label: 'Merge', icon: GitMerge, color: 'text-violet-500' },
 ];

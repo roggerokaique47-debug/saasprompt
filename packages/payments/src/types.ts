@@ -8,7 +8,7 @@ export type PaymentEventAction =
   | 'PAYMENT_FAILED';
 
 export interface NormalizedPaymentEvent {
-  userId: string;
+  organizationId: string;
   action: PaymentEventAction;
   plan?: PaymentPlan;
   subscriptionId?: string;
@@ -23,7 +23,7 @@ export interface NormalizedPaymentEvent {
 }
 
 export interface CheckoutParams {
-  userId: string;
+  organizationId: string;
   plan: PaymentPlan;
   successUrl: string;
   cancelUrl: string;

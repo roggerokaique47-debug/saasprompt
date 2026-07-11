@@ -36,9 +36,20 @@ export async function POST(
     const newWorkflowId = uuidv4();
     const newTitle = `${originalWorkflow.title} (Clone)`;
     const newSlug = `${originalWorkflow.slug}-clone-${Date.now()}`;
+    // Obter ou criar organização padrão
+    const { organizations } = await import('@prompthub/database/src/schema/organizations');
+    let [org] = await db.select().from(organizations).where(eq(organizations.ownerId, user.id)).limit(1);
+    if (!org) {
+      [org] = await db.insert(organizations).values({
+        name: 'My Workspace',
+        slug: `workspace-${user.id.slice(0,8)}`,
+        ownerId: user.id,
+      }).returning();
+    }
 
     await db.insert(workflows).values({
       id: newWorkflowId,
+      organizationId: org.id,
       title: newTitle,
       slug: newSlug,
       description: originalWorkflow.description,

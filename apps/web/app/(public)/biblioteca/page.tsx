@@ -1,325 +1,90 @@
-import type { Metadata } from 'next';
-import Link from 'next/link';
-import db from '@prompthub/database/src/client';
-import { workflows, workflowCategories } from '@prompthub/database/src/schema/workflows';
-import { eq, ilike, or, and, desc, sql, count, type SQL } from 'drizzle-orm';
-import { SortSelect } from '@/components/sort-select';
-import { Users, Star, Download, Play, Zap } from 'lucide-react';
+"use client";
 
-export const dynamic = 'force-dynamic';
+import Link from "next/link";
+import "./biblioteca.css";
 
-export const metadata: Metadata = {
-  title: 'Marketplace de Templates | NovaFlow AI',
-  description: 'Descubra workflows prontos para automatizar seu negócio instantaneamente.',
-};
+const TEMPLATES = [
+  { title: 'Agente WhatsApp Pro', icon: '💬', desc: 'Atendimento 24h com IA, agendamento e qualificação de leads.', downloads: '3.2k', rating: '4.8' },
+  { title: 'Email Marketing Automático', icon: '📧', desc: 'Sequência de nutrição com personalização por IA. Integra com Mailchimp.', downloads: '1.9k', rating: '4.6' },
+  { title: 'Suporte Técnico N1', icon: '🎧', desc: 'Responde 80% das dúvidas frequentes. Transfere para humano se necessário.', downloads: '2.7k', rating: '4.9' },
+  { title: 'Recuperação de Vendas', icon: '🛒', desc: 'Dispara WhatsApp para carrinho abandonado. Shopify, Hotmart, Kiwify.', downloads: '1.8k', rating: '4.7' },
+  { title: 'Agendamento Online', icon: '📅', desc: 'Clientes agendam pelo WhatsApp com verificação de disponibilidade.', downloads: '1.5k', rating: '4.5' },
+  { title: 'CRM Automático', icon: '📊', desc: 'Adiciona leads automaticamente ao CRM e dispara sequência de vendas.', downloads: '2.1k', rating: '4.8' },
+];
 
-interface PageProps {
-  searchParams: Promise<{
-    q?: string;
-    categoria?: string;
-    app?: string;
-    preco?: string;
-    sort?: string;
-    page?: string;
-  }>;
-}
-
-const ITEMS_PER_PAGE = 18;
-
-// Integration options based on common apps
-const INTEGRATION_APPS = ['Gmail', 'Slack', 'Stripe', 'WhatsApp', 'Notion', 'Shopify'];
-
-export default async function BibliotecaPage({ searchParams }: PageProps) {
-  const params = await searchParams;
-  const query = params.q?.trim() || '';
-  const categoriaSlug = params.categoria || '';
-  const appFilter = params.app || '';
-  const preco = params.preco || '';
-  const sort = params.sort || 'relevance';
-  const currentPage = Math.max(1, Number(params.page) || 1);
-
-  const conditions = [eq(workflows.isPublished, true)];
-
-  if (query) {
-    const searchPattern = `%${query}%`;
-    const searchConditions = [
-      ilike(workflows.title, searchPattern),
-      ilike(workflows.description, searchPattern),
-    ].filter(Boolean) as SQL<unknown>[];
-    conditions.push(
-      or(...searchConditions) ?? sql`1=0`,
-    );
-  }
-
-  if (categoriaSlug) {
-    const [cat] = await db
-      .select({ id: workflowCategories.id })
-      .from(workflowCategories)
-      .where(eq(workflowCategories.slug, categoriaSlug))
-      .limit(1);
-    if (cat) {
-      conditions.push(eq(workflows.categoryId, cat.id));
-    }
-  }
-
-  if (appFilter) {
-    conditions.push(sql`${appFilter} = ANY(${workflows.tags})`);
-  }
-
-  if (preco === 'gratis') {
-    conditions.push(eq(workflows.isPremium, false));
-  } else if (preco === 'pago') {
-    conditions.push(eq(workflows.isPremium, true));
-  }
-
-  const where = and(...conditions);
-
-  const orderBy =
-    sort === 'downloads'
-      ? desc(workflows.downloads)
-      : sort === 'rating'
-        ? desc(workflows.ratingAvg)
-        : sort === 'newest'
-          ? desc(workflows.createdAt)
-          : desc(workflows.views);
-
-  const offset = (currentPage - 1) * ITEMS_PER_PAGE;
-
-  const [allWorkflows, totalResult, allCategories] = await Promise.all([
-    db
-      .select()
-      .from(workflows)
-      .where(where)
-      .orderBy(orderBy)
-      .limit(ITEMS_PER_PAGE)
-      .offset(offset),
-    db
-      .select({ total: count() })
-      .from(workflows)
-      .where(where),
-    db.select().from(workflowCategories).orderBy(workflowCategories.name),
-  ]);
-
-  const total = totalResult[0]?.total ?? 0;
-  const totalPages = Math.ceil(total / ITEMS_PER_PAGE);
-
+export default function BibliotecaPage() {
   return (
-    <main className="mx-auto max-w-7xl px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-700 to-indigo-600">
-          Marketplace de Automações
-        </h1>
-        <p className="mt-2 text-muted-foreground">
-          Descubra {total} workflows prontos para impulsionar a sua operação.
-        </p>
-      </div>
-
-      <div className="mb-6 flex gap-3">
-        <div className="relative flex-1">
-          <form method="GET" action="/biblioteca">
-            {params.sort && <input type="hidden" name="sort" value={params.sort} />}
-            <input
-              type="text"
-              name="q"
-              defaultValue={query}
-              placeholder="Pesquise por casos de uso, Ex: 'CRM WhatsApp', 'Recuperação de Carrinho'..."
-              className="w-full rounded-xl border border-border bg-white px-4 py-3 pl-11 outline-none focus:border-primary shadow-sm"
-            />
-            <svg
-              className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </form>
+    <main>
+      <section className="page-hero">
+        <div className="container">
+          <p className="eyebrow fade-up" data-i18n="bib_eyebrow">BIBLIOTECA</p>
+          <h1 className="fade-up" data-i18n="bib_title">Marketplace de templates</h1>
+          <p className="lead fade-up" data-i18n="bib_desc">Descubra centenas de workflows, agentes e integrações prontas para acelerar seu negócio.</p>
+          <div className="search-section fade-up">
+            <form className="tpl-search" action="/biblioteca">
+              <span style={{ color: "var(--muted)" }}>🔍</span>
+              <input type="search" name="q" placeholder="Buscar templates..." data-i18n="bib_search" />
+            </form>
+          </div>
         </div>
+      </section>
 
-        <div className="flex items-center gap-2">
-          <label className="text-sm text-muted-foreground whitespace-nowrap">Ordenar por:</label>
-          <SortSelect
-            defaultValue={sort}
-            options={[
-              { value: 'relevance', label: 'Relevância' },
-              { value: 'downloads', label: 'Mais Clonados' },
-              { value: 'rating', label: 'Melhor Avaliados' },
-              { value: 'newest', label: 'Adicionados Recentemente' },
-            ]}
-          />
-        </div>
-      </div>
-
-      <div className="flex gap-8">
-        <aside className="hidden w-56 shrink-0 lg:block">
-          <div className="sticky top-24 space-y-6">
-            {/* Categorias de Negócio */}
-            <div>
-              <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                Áreas de Negócio
-              </h3>
-              <ul className="space-y-1">
-                <li>
-                  <Link
-                    href="/biblioteca"
-                    className={`block rounded-lg px-3 py-2 text-sm transition-colors ${
-                      !categoriaSlug ? 'bg-purple-100 font-medium text-purple-700' : 'text-muted-foreground hover:bg-slate-100'
-                    }`}
-                  >
-                    Todas as Áreas
-                  </Link>
-                </li>
-                {allCategories.map((cat) => (
-                  <li key={cat.id}>
-                    <Link
-                      href={`/biblioteca?categoria=${cat.slug}`}
-                      className={`block rounded-lg px-3 py-2 text-sm transition-colors ${
-                        categoriaSlug === cat.slug ? 'bg-purple-100 font-medium text-purple-700' : 'text-muted-foreground hover:bg-slate-100'
-                      }`}
-                    >
-                      <span className="mr-2 text-lg">{cat.icon}</span> {cat.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+      <section className="section">
+        <div className="container">
+          <h2 className="h3 fade-up" style={{ marginBottom: "var(--gap-md)" }} data-i18n="bib_categories">Categorias</h2>
+          <div className="cat-grid">
+            <div className="cat-card fade-up">
+              <div className="cat-icon">💬</div>
+              <h3>WhatsApp</h3>
+              <p data-i18n="bib_cat1">Automação de atendimento e vendas</p>
             </div>
-
-            {/* Apps Connectados */}
-            <div>
-              <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                Integrações
-              </h3>
-              <div className="space-y-1">
-                {INTEGRATION_APPS.map((app) => (
-                  <Link
-                    key={app}
-                    href={`/biblioteca?app=${app}`}
-                    className={`block rounded-lg px-3 py-2 text-sm transition-colors ${
-                      appFilter === app ? 'bg-purple-100 font-medium text-purple-700' : 'text-muted-foreground hover:bg-slate-100'
-                    }`}
-                  >
-                    {app}
-                  </Link>
-                ))}
-              </div>
+            <div className="cat-card fade-up">
+              <div className="cat-icon">📧</div>
+              <h3>E-mail</h3>
+              <p data-i18n="bib_cat2">Marketing e sequências de e-mail</p>
             </div>
-
-            {/* Precificação */}
-            <div>
-              <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                Preço
-              </h3>
-              <div className="space-y-1">
-                {[
-                  { label: 'Todos', value: '' },
-                  { label: 'Templates Gratuitos', value: 'gratis' },
-                  { label: 'Templates Premium', value: 'pago' },
-                ].map((p) => (
-                  <Link
-                    key={p.value}
-                    href={`/biblioteca${p.value ? `?preco=${p.value}` : ''}`}
-                    className={`block rounded-lg px-3 py-2 text-sm transition-colors ${
-                      preco === p.value ? 'bg-purple-100 font-medium text-purple-700' : 'text-muted-foreground hover:bg-slate-100'
-                    }`}
-                  >
-                    {p.label}
-                  </Link>
-                ))}
-              </div>
+            <div className="cat-card fade-up">
+              <div className="cat-icon">🤖</div>
+              <h3>Agentes IA</h3>
+              <p data-i18n="bib_cat3">Assistentes inteligentes prontos</p>
+            </div>
+            <div className="cat-card fade-up">
+              <div className="cat-icon">🔗</div>
+              <h3>Integrações</h3>
+              <p data-i18n="bib_cat4">CRM, ERP, planilhas e mais</p>
             </div>
           </div>
-        </aside>
 
-        <div className="flex-1">
-          {allWorkflows.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 py-16 text-center">
-              <p className="text-lg font-medium text-slate-800">Nenhum template encontrado</p>
-              <p className="mt-1 text-sm text-slate-500">
-                Tente ajustar os filtros ou pesquisar por outras palavras-chave.
-              </p>
-              <Link href="/biblioteca" className="mt-4 inline-block text-sm font-medium text-purple-600 hover:underline">
-                Limpar todos os filtros
-              </Link>
-            </div>
-          ) : (
-            <>
-              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                {allWorkflows.map((workflow) => (
-                  <Link
-                    key={workflow.id}
-                    href={`/biblioteca/template/${workflow.slug}`}
-                    className="group flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-5 transition-all hover:border-purple-300 hover:shadow-lg"
-                  >
-                    <div>
-                      <div className="mb-3 flex items-start justify-between gap-2">
-                        <h3 className="line-clamp-2 font-semibold text-slate-900 group-hover:text-purple-700">
-                          {workflow.title}
-                        </h3>
-                        <div className="flex items-center gap-1 rounded bg-amber-100 px-1.5 py-0.5 text-xs font-semibold text-amber-700">
-                          <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
-                          {Number(workflow.ratingAvg).toFixed(1)}
-                        </div>
-                      </div>
-
-                      <p className="mb-4 line-clamp-2 text-sm text-slate-500">
-                        {workflow.description}
-                      </p>
-
-                      <div className="mb-4 flex flex-wrap gap-1.5">
-                        {workflow.tags?.slice(0, 3).map((tag) => (
-                          <span
-                            key={tag}
-                            className="flex items-center rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-[10px] font-medium uppercase tracking-wider text-slate-600"
-                          >
-                            <Zap className="mr-1 h-3 w-3 text-purple-500" />
-                            {tag}
-                          </span>
-                        ))}
-                        {(workflow.tags?.length || 0) > 3 && (
-                          <span className="flex items-center rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-[10px] font-medium uppercase tracking-wider text-slate-600">
-                            +{(workflow.tags?.length || 0) - 3}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="mt-auto flex items-center justify-between border-t border-slate-100 pt-3 text-xs font-medium text-slate-500">
-                      <div className="flex items-center gap-1.5">
-                        <Download className="h-3.5 w-3.5" />
-                        {workflow.downloads} clones
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        {workflow.isPremium ? (
-                          <span className="rounded bg-purple-100 px-2 py-0.5 text-purple-700">Premium</span>
-                        ) : (
-                          <span className="rounded bg-green-100 px-2 py-0.5 text-green-700">Grátis</span>
-                        )}
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-
-              {totalPages > 1 && (
-                <div className="mt-8 flex items-center justify-center gap-2">
-                  {/* Paginacao omitida por brevidade (mesma logica do original) */}
-                  {currentPage > 1 && (
-                    <Link href={`/biblioteca?page=${currentPage - 1}`} className="rounded-lg border border-border px-4 py-2 text-sm hover:bg-muted">Anterior</Link>
-                  )}
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                    <Link key={p} href={`/biblioteca?page=${p}`} className={`rounded-lg px-3 py-2 text-sm ${p === currentPage ? 'bg-purple-600 text-white' : 'border border-border hover:bg-slate-50'}`}>
-                      {p}
-                    </Link>
-                  ))}
-                  {currentPage < totalPages && (
-                    <Link href={`/biblioteca?page=${currentPage + 1}`} className="rounded-lg border border-border px-4 py-2 text-sm hover:bg-muted">Próxima</Link>
-                  )}
+          <h2 className="h3 fade-up" style={{ marginBottom: "var(--gap-md)" }} data-i18n="bib_popular">Templates em destaque</h2>
+          <div className="template-grid">
+            {TEMPLATES.map((t, idx) => (
+              <div key={idx} className="tpl-card fade-up">
+                <div className="tpl-icon">{t.icon}</div>
+                <h3>{t.title}</h3>
+                <p>{t.desc}</p>
+                <div className="tpl-meta">
+                  <span>⬇ {t.downloads}</span>
+                  <span>★ {t.rating}</span>
                 </div>
-              )}
-            </>
-          )}
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      </section>
+
+      <section className="section section-alt" style={{ textAlign: "center" }}>
+        <div className="container">
+          <h2 className="h2 fade-up" data-i18n="bib_cta_title">Quer publicar seu template?</h2>
+          <p className="lead fade-up" style={{ margin: "var(--gap-md) auto" }} data-i18n="bib_cta_desc">
+            Criadores podem publicar workflows na comunidade e ganhar comissão por cada download.
+          </p>
+          <div className="hero-cta fade-up">
+            <Link href="/cadastro" className="btn btn-primary btn-glow btn-arrow" data-i18n="bib_cta_btn">
+              Criar e publicar
+            </Link>
+          </div>
+        </div>
+      </section>
     </main>
   );
 }

@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
 import { executeWorkflow } from '@prompthub/engine';
-import { NodeType, WorkflowDefinition } from '@prompthub/engine/src/nodes';
+import { NodeType, WorkflowDefinition } from '@prompthub/engine';
 import db from '@prompthub/database/src/client';
 import { users } from '@prompthub/database/src/schema/users';
-import { workflows } from '@prompthub/database/src/schema/workflows';
+import { organizations } from '@prompthub/database/src/schema/organizations';
 import { eq } from 'drizzle-orm';
 
 export async function POST(
@@ -13,7 +13,7 @@ export async function POST(
   try {
     const { id } = await params;
     const body = await req.json();
-    const { nodes = [], edges = [] } = body;
+    const { nodes = [], edges = [], agentId } = body;
 
     // Autenticação Real B2B via Supabase
     const { createClient } = await import('@/lib/supabase/server');
@@ -25,12 +25,20 @@ export async function POST(
     }
 
     const userId = user.id;
+    
+    // Obter organizationId primário do usuário
+    const userResult = await db.select({ organizationId: users.organizationId }).from(users).where(eq(users.id, userId)).limit(1);
+    const organizationId = userResult.length > 0 ? userResult[0].organizationId : null;
+    
+    if (!organizationId) {
+       return NextResponse.json({ error: 'User does not belong to an organization' }, { status: 403 });
+    }
 
-    // 1. Escudo SaaS: Validar Saldo de Créditos
-    const userResult = await db.select().from(users).where(eq(users.id, userId)).limit(1);
-    const dbUser = userResult.length > 0 ? userResult[0] : null;
+    // 1. Escudo SaaS: Validar Saldo de Créditos da Organização
+    const orgResult = await db.select().from(organizations).where(eq(organizations.id, organizationId)).limit(1);
+    const dbOrg = orgResult.length > 0 ? orgResult[0] : null;
 
-    if (dbUser && dbUser.credits < 1) {
+    if (dbOrg && dbOrg.credits < 1) {
       return NextResponse.json(
         { error: 'Insufficient credits. Upgrade your plan or buy more tokens.' },
         { status: 402 } // 402 Payment Required
@@ -41,9 +49,9 @@ export async function POST(
     // Calcula o custo com base no número de blocos (simplificado)
     const cost = Math.max(1, Math.floor(nodes.length / 2));
     
-    await db.update(users)
-      .set({ credits: dbUser!.credits - cost })
-      .where(eq(users.id, userId));
+    await db.update(organizations)
+      .set({ credits: dbOrg!.credits - cost })
+      .where(eq(organizations.id, organizationId));
 
     // Map React Flow format to Engine format
     const engineNodes = nodes.map((node: any) => ({
@@ -73,7 +81,7 @@ export async function POST(
       updatedAt: new Date().toISOString()
     };
 
-    const result = await executeWorkflow(workflowDef, { userId });
+    const result = await executeWorkflow(workflowDef, { userId, organizationId, agentId: agentId ?? undefined });
 
     return NextResponse.json(result);
   } catch (error) {

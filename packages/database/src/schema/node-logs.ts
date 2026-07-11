@@ -1,7 +1,9 @@
 import { pgTable, uuid, text, integer, timestamp, jsonb } from 'drizzle-orm/pg-core';
+import { organizations } from './organizations';
 
 export const nodeLogs = pgTable('node_logs', {
   id: uuid('id').defaultRandom().primaryKey(),
+  organizationId: uuid('organization_id').notNull(),
   executionId: uuid('execution_id').notNull(),
   nodeId: text('node_id').notNull(),
   nodeType: text('node_type').notNull(),

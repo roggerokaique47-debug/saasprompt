@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { LogoutButton } from './logout-button';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { Webhook, Send, Zap, Clock, GitMerge, Filter, MessageSquare, Mail, Home, Plus, Library, Settings, Smartphone, CreditCard } from 'lucide-react';
+import { Webhook, Send, Zap, Clock, GitMerge, Filter, MessageSquare, Mail, Home, Plus, Library, Settings, Smartphone, CreditCard, Briefcase, Store, Activity } from 'lucide-react';
 
 const NODE_TYPES = [
   { type: 'webhook', label: 'Webhook Trigger', icon: Webhook, color: 'text-indigo-500' },
@@ -34,8 +34,8 @@ export function DashboardSidebar({ user }: { user: any }) {
       <div className="flex h-16 shrink-0 items-center px-6 border-b border-slate-100">
         <Link href="/" className="flex items-center gap-2 text-xl font-bold text-primary">
           <svg className="h-7 w-7" viewBox="0 0 32 32" fill="none">
-            <rect width="32" height="32" rx="8" fill="currentColor"/>
-            <path d="M10 22V10l6 6 6-6v12" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <rect width="32" height="32" rx="8" fill="currentColor" />
+            <path d="M10 22V10l6 6 6-6v12" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
           NovaFlow
         </Link>
@@ -57,11 +57,39 @@ export function DashboardSidebar({ user }: { user: any }) {
           Criar Workflow
         </Link>
         <Link
-          href="/workflows"
-          className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium ${pathname === '/workflows' ? 'bg-slate-100 text-slate-900' : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'}`}
+          href="/dashboard/templates"
+          className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium ${pathname?.includes('/dashboard/templates') ? 'bg-slate-100 text-slate-900' : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'}`}
         >
           <Library className="w-[18px] h-[18px]" />
-          Biblioteca
+          Templates
+        </Link>
+        <Link
+          href="/dashboard/agentes"
+          className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium ${pathname?.includes('/dashboard/agentes') ? 'bg-slate-100 text-slate-900' : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'}`}
+        >
+          <Briefcase className="w-[18px] h-[18px]" />
+          Funcionários de IA
+        </Link>
+        <Link
+          href="/dashboard/marketplace"
+          className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium ${pathname?.includes('/dashboard/marketplace') ? 'bg-slate-100 text-slate-900' : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'}`}
+        >
+          <Store className="w-[18px] h-[18px]" />
+          Marketplace
+        </Link>
+        <Link
+          href="/dashboard/execucoes"
+          className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium ${pathname?.includes('/dashboard/execucoes') ? 'bg-slate-100 text-slate-900' : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'}`}
+        >
+          <Activity className="w-[18px] h-[18px]" />
+          Execuções
+        </Link>
+        <Link
+          href="/dashboard/afiliados"
+          className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium ${pathname?.includes('/dashboard/afiliados') ? 'bg-slate-100 text-slate-900' : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'}`}
+        >
+          <Zap className="w-[18px] h-[18px]" />
+          Afiliados
         </Link>
         <Link
           href="/dashboard/integracoes"

@@ -2,9 +2,10 @@
 
 import React, { useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
-import { Sparkles, X, Loader2, Wand2 } from 'lucide-react';
+import { Sparkles, X, Loader2, Wand2, Rocket } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Node, Edge } from '@xyflow/react';
+import Link from 'next/link';
 
 interface AIGeneratorModalProps {
   isOpen: boolean;
@@ -16,6 +17,7 @@ export function AIGeneratorModal({ isOpen, onOpenChange, onGenerate }: AIGenerat
   const [prompt, setPrompt] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isOutOfTokens, setIsOutOfTokens] = useState(false);
 
   const handleGenerate = async () => {
     if (!prompt.trim()) return;
@@ -29,6 +31,11 @@ export function AIGeneratorModal({ isOpen, onOpenChange, onGenerate }: AIGenerat
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt }),
       });
+
+      if (response.status === 402) {
+        setIsOutOfTokens(true);
+        throw new Error('Saldo insuficiente para usar a IA.');
+      }
 
       const data = await response.json();
 
@@ -84,10 +91,29 @@ export function AIGeneratorModal({ isOpen, onOpenChange, onGenerate }: AIGenerat
               onChange={(e) => setPrompt(e.target.value)}
               disabled={isLoading}
             />
-            {error && (
+            {error && !isOutOfTokens && (
               <p className="text-red-500 text-sm mt-2 font-medium bg-red-50 p-2 rounded-md border border-red-100">
                 {error}
               </p>
+            )}
+            
+            {isOutOfTokens && (
+              <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-xl flex flex-col items-center justify-center space-y-3">
+                <p className="text-amber-800 text-sm font-semibold text-center">
+                  Seus créditos acabaram!
+                </p>
+                <p className="text-amber-700 text-xs text-center">
+                  Você consumiu todos os tokens do plano. Faça o upgrade ou compre tokens avulsos para continuar usando a IA Mágica.
+                </p>
+                <Link 
+                  href="/dashboard/faturamento"
+                  onClick={() => onOpenChange(false)}
+                  className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-bold transition-all"
+                >
+                  <Rocket className="w-4 h-4" />
+                  Ir para Faturamento
+                </Link>
+              </div>
             )}
           </div>
           
@@ -97,23 +123,26 @@ export function AIGeneratorModal({ isOpen, onOpenChange, onGenerate }: AIGenerat
                 Cancelar
               </Button>
             </Dialog.Close>
-            <Button 
-              onClick={handleGenerate} 
-              disabled={isLoading || !prompt.trim()}
-              className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg border-none"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Gerando a mágica...
-                </>
-              ) : (
-                <>
-                  <Wand2 className="w-4 h-4 mr-2" />
-                  Gerar Automagicamente
-                </>
-              )}
-            </Button>
+            
+            {!isOutOfTokens && (
+              <Button 
+                onClick={handleGenerate} 
+                disabled={isLoading || !prompt.trim()}
+                className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg border-none"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Gerando a mágica...
+                  </>
+                ) : (
+                  <>
+                    <Wand2 className="w-4 h-4 mr-2" />
+                    Gerar Automagicamente
+                  </>
+                )}
+              </Button>
+            )}
           </div>
         </Dialog.Content>
       </Dialog.Portal>

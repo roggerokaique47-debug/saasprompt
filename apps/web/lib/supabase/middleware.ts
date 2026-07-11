@@ -43,7 +43,10 @@ export async function updateSession(request: NextRequest) {
   // Proteger rotas privadas
   if (
     !user &&
-    request.nextUrl.pathname.startsWith('/dashboard')
+    (request.nextUrl.pathname.startsWith('/dashboard') ||
+     request.nextUrl.pathname.startsWith('/admin') ||
+     request.nextUrl.pathname.startsWith('/artigos/novo') ||
+     request.nextUrl.pathname.startsWith('/workflows/novo'))
   ) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';

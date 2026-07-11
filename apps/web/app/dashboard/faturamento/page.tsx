@@ -1,11 +1,28 @@
 import React from 'react';
 import { CreditCard, Key } from 'lucide-react';
+import { createClient } from '@/lib/supabase/server';
+import db from '@prompthub/database/src/client';
+import { users } from '@prompthub/database/src/schema/users';
+import { organizations } from '@prompthub/database/src/schema/organizations';
+import { eq } from 'drizzle-orm';
 
 export const metadata = {
   title: 'Faturamento - Brasa Match',
 };
 
-export default function FaturamentoPage() {
+export default async function FaturamentoPage() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  let currentCredits = 0;
+  if (user) {
+    const [dbUser] = await db.select({ organizationId: users.organizationId }).from(users).where(eq(users.id, user.id)).limit(1);
+    if (dbUser?.organizationId) {
+      const [org] = await db.select({ credits: organizations.credits }).from(organizations).where(eq(organizations.id, dbUser.organizationId)).limit(1);
+      if (org) currentCredits = org.credits;
+    }
+  }
+
   return (
     <div className="flex-1 space-y-6 p-8 pt-6">
       <div className="flex items-center justify-between space-y-2">
@@ -23,7 +40,7 @@ export default function FaturamentoPage() {
       <div className="grid gap-6 md:grid-cols-2 mt-8">
         <div className="border border-zinc-200 dark:border-zinc-800 rounded-lg p-6 bg-white dark:bg-zinc-900">
           <h3 className="text-xl font-semibold mb-2">Saldo de Tokens</h3>
-          <p className="text-4xl font-bold text-indigo-600 dark:text-indigo-400 mb-4">100</p>
+          <p className="text-4xl font-bold text-indigo-600 dark:text-indigo-400 mb-4">{currentCredits}</p>
           <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-6">
             Tokens são usados para gerar fluxos de IA, usar o Copilot e enviar mensagens via WAHA.
           </p>

@@ -11,6 +11,7 @@ export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
 
 export async function createCheckoutSession(params: {
   userId: string;
+  organizationId: string;
   priceId: string;
   successUrl: string;
   cancelUrl: string;
@@ -22,12 +23,13 @@ export async function createCheckoutSession(params: {
     client_reference_id: params.userId,
     success_url: params.successUrl,
     cancel_url: params.cancelUrl,
-    metadata: { userId: params.userId },
+    metadata: { userId: params.userId, organizationId: params.organizationId },
   });
 }
 
 export async function createTokenCheckoutSession(params: {
   userId: string;
+  organizationId: string;
   priceId: string;
   successUrl: string;
   cancelUrl: string;
@@ -39,7 +41,7 @@ export async function createTokenCheckoutSession(params: {
     client_reference_id: params.userId,
     success_url: params.successUrl,
     cancel_url: params.cancelUrl,
-    metadata: { userId: params.userId, type: 'tokens' },
+    metadata: { userId: params.userId, organizationId: params.organizationId, type: 'tokens' },
   });
 }
 

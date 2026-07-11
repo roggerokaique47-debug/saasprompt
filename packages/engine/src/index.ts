@@ -1,8 +1,8 @@
 export { executeWorkflow } from './engine';
-export { executors } from './executors';
-export { NodeType } from './nodes';
-export { callChatCompletion, registerProvider, getActiveProvider, initEnvProvider } from './ai-provider';
-export type { AIProviderConfig, AIProviderType } from './ai-provider';
+export { nodeRegistry as executors } from '@prompthub/nodes';
+export { NodeType } from '@prompthub/nodes';
+export { initEnvProvider, callChatCompletion, registerProvider, getActiveProvider, getProvider } from '@prompthub/nodes';
+export type { AIProviderConfig, AIProviderType } from '@prompthub/nodes';
 export type {
   WorkflowNode,
   WorkflowEdge,
@@ -10,4 +10,5 @@ export type {
   ExecutionResult,
   NodeExecutor,
   NodeType as NodeTypeEnum,
-} from './nodes';
+  ExecutionStepUpdate,
+} from '@prompthub/nodes';

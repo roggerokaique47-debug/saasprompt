@@ -1,6 +1,6 @@
-import { WorkflowDefinition, ExecutionResult, WorkflowNode } from './nodes';
-import { executors } from './executors';
-import { initEnvProvider } from './ai-provider';
+import { WorkflowDefinition, ExecutionResult, WorkflowNode, ExecutionContext, ExecutionStepUpdate, nodeRegistry, initEnvProvider } from '@prompthub/nodes';
+import { getTraceLogger } from '@prompthub/shared';
+import { runInSpan } from '@prompthub/shared/src/observability/otel';
 
 initEnvProvider();
 
@@ -58,7 +58,7 @@ function getInputForNode(
   }));
 }
 
-export async function executeWorkflow(workflow: WorkflowDefinition, context?: import('./nodes').ExecutionContext): Promise<{
+export async function executeWorkflow(workflow: WorkflowDefinition, context?: ExecutionContext): Promise<{
   results: ExecutionResult[];
   totalDurationMs: number;
   success: boolean;
@@ -66,10 +66,29 @@ export async function executeWorkflow(workflow: WorkflowDefinition, context?: im
   const sortedNodes = topologicalSort(workflow.nodes, workflow.edges);
   const results = new Map<string, ExecutionResult>();
   const startTime = Date.now();
+  
+  const traceId = context?.traceId || 'unknown-trace';
+  const correlationId = context?.correlationId || 'unknown-correlation';
+  const executionId = context?.executionId || 'unknown-execution';
+  const orgId = context?.organizationId || 'unknown-org';
+
+  const logger = getTraceLogger(traceId, correlationId, 'Engine');
+  logger.info({ executionId, orgId, nodesCount: sortedNodes.length }, 'Starting workflow execution');
 
   for (const node of sortedNodes) {
-    const executor = executors[node.type];
+    const executor = nodeRegistry[node.type];
     if (!executor) {
+      const stepUpdate: ExecutionStepUpdate = {
+        nodeId: node.id,
+        nodeLabel: node.label,
+        nodeType: node.type,
+        status: 'error',
+        error: `No executor found for node type: ${node.type}`,
+        completedAt: new Date().toISOString(),
+      };
+      await context?.onNodeComplete?.(stepUpdate);
+      logger.error({ nodeId: node.id, nodeType: node.type }, 'No executor found');
+
       results.set(node.id, {
         nodeId: node.id,
         nodeType: node.type,
@@ -84,34 +103,94 @@ export async function executeWorkflow(workflow: WorkflowDefinition, context?: im
 
     const input = getInputForNode(node.id, workflow.edges, results);
     const nodeStart = Date.now();
+    const startedAt = new Date().toISOString();
+
+    logger.info({ nodeId: node.id, nodeType: node.type }, 'Node starting');
+
+    // 🔔 Notify: node is starting
+    await context?.onNodeStart?.({
+      nodeId: node.id,
+      nodeLabel: node.label,
+      nodeType: node.type,
+      status: 'running',
+      input,
+      startedAt,
+    });
 
     try {
-      const output = await executor.execute(node.config, input, context);
+      const output = await runInSpan(`node-${node.type}`, async (span) => {
+        span.setAttribute('node.id', node.id);
+        span.setAttribute('node.type', node.type);
+        span.setAttribute('execution.id', executionId);
+        return await executor.execute(node.config, input, context);
+      });
+      const durationMs = Date.now() - nodeStart;
+      const completedAt = new Date().toISOString();
+
+      logger.info({ nodeId: node.id, durationMs }, 'Node completed successfully');
+
+      // 🔔 Notify: node completed successfully
+      await context?.onNodeComplete?.({
+        nodeId: node.id,
+        nodeLabel: node.label,
+        nodeType: node.type,
+        status: 'success',
+        input,
+        output,
+        durationMs,
+        startedAt,
+        completedAt,
+      });
+
       results.set(node.id, {
         nodeId: node.id,
         nodeType: node.type,
         status: 'success',
         output,
-        durationMs: Date.now() - nodeStart,
-        timestamp: new Date().toISOString(),
+        durationMs,
+        timestamp: completedAt,
       });
     } catch (error) {
+      const durationMs = Date.now() - nodeStart;
+      const completedAt = new Date().toISOString();
+      const errorMsg = (error as Error).message;
+
+      logger.error({ nodeId: node.id, durationMs, error: errorMsg }, 'Node failed');
+
+      // 🔔 Notify: node failed
+      await context?.onNodeComplete?.({
+        nodeId: node.id,
+        nodeLabel: node.label,
+        nodeType: node.type,
+        status: 'error',
+        input,
+        error: errorMsg,
+        durationMs,
+        startedAt,
+        completedAt,
+      });
+
       results.set(node.id, {
         nodeId: node.id,
         nodeType: node.type,
         status: 'error',
         output: null,
-        error: (error as Error).message,
-        durationMs: Date.now() - nodeStart,
-        timestamp: new Date().toISOString(),
+        error: errorMsg,
+        durationMs,
+        timestamp: completedAt,
       });
     }
   }
 
   const allResults = Array.from(results.values());
+  const success = allResults.every((r) => r.status === 'success');
+  const totalDurationMs = Date.now() - startTime;
+  
+  logger.info({ executionId, success, totalDurationMs }, 'Workflow execution finished');
+
   return {
     results: allResults,
-    totalDurationMs: Date.now() - startTime,
-    success: allResults.every((r) => r.status === 'success'),
+    totalDurationMs,
+    success,
   };
 }

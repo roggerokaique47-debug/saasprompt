@@ -2,18 +2,33 @@ import { NextResponse } from 'next/server';
 import db from '@prompthub/database/src/client';
 import { leads } from '@prompthub/database/src/schema/leads';
 
+import { LeadsSchema } from '@prompthub/shared/src/validations/apiSchema';
+
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const { email, source } = body;
-
-    if (!email) {
-      return NextResponse.json({ error: 'E-mail é obrigatório.' }, { status: 400 });
+    let body;
+    try {
+      body = await req.json();
+    } catch (e) {
+      return NextResponse.json({ error: 'Invalid JSON payload' }, { status: 400 });
     }
+
+    const parsed = LeadsSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'E-mail é obrigatório e deve ser válido.' }, { status: 400 });
+    }
+
+    const { email, source, organizationId: bodyOrgId } = parsed.data;
 
     // Insere o lead. O banco gerencia o unique email, se der erro capturamos.
     try {
+      const organizationId = req.headers.get('x-organization-id') || bodyOrgId;
+      if (!organizationId) {
+        return NextResponse.json({ error: 'organizationId é obrigatório' }, { status: 400 });
+      }
+
       await db.insert(leads).values({
+        organizationId,
         email,
         source: source || 'landing_page',
       });

@@ -1,0 +1,20 @@
+.search-section { display:flex;gap:var(--gap-sm);flex-wrap:wrap;margin-bottom:var(--gap-xl);position:relative;z-index:1;justify-content:center; }
+.tpl-search { display:flex;gap:var(--gap-sm);align-items:center;padding:8px 16px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);flex:1;max-width:480px;transition:border-color .2s; }
+.tpl-search:focus-within { border-color:var(--accent); }
+.tpl-search input { flex:1;border:none;background:none;color:var(--fg);font-size:14px;outline:none; }
+.tpl-search input::placeholder { color:var(--muted); }
+.cat-grid { display:grid;grid-template-columns:repeat(4,1fr);gap:var(--gap-md);margin-bottom:var(--gap-2xl); }
+.cat-card { text-align:center;padding:28px 16px;background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius-lg);transition:border-color .3s,transform .3s;cursor:pointer; }
+.cat-card:hover { border-color:color-mix(in oklch,var(--accent) 30%,var(--border));transform:translateY(-3px); }
+.cat-card .cat-icon { font-size:32px;margin-bottom:var(--gap-sm); }
+.cat-card h3 { font-size:14px;margin:0 0 4px; font-weight: 600; color: var(--fg); }
+.cat-card p { font-size:12px;color:var(--muted);margin:0; }
+.template-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:var(--gap-md); }
+.tpl-card { background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;transition:border-color .3s,transform .3s; }
+.tpl-card:hover { border-color:color-mix(in oklch,var(--accent) 30%,var(--border));transform:translateY(-3px); }
+.tpl-icon { font-size:28px;margin-bottom:var(--gap-sm); }
+.tpl-card h3 { font-size:15px;margin-bottom:4px; font-weight: 600; color: var(--fg); }
+.tpl-card p { font-size:13px;color:var(--muted);margin:0 0 var(--gap-sm); }
+.tpl-meta { display:flex;gap:var(--gap-md);font-size:11px;color:var(--muted);font-family:var(--font-mono); }
+@media(max-width:920px){.cat-grid,.template-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){.cat-grid,.template-grid{grid-template-columns:1fr}}

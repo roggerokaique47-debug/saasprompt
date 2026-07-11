@@ -1,223 +1,200 @@
-import type { Metadata } from 'next';
-import Link from 'next/link';
-import { FeedbackWidget } from '@/components/feedback-widget';
-
-export const metadata: Metadata = {
-  title: 'Dashboard - NovaFlow AI',
-  description: 'Gerencie seus workflows e automacoes',
-};
-import db from '@prompthub/database/src/client';
-import { users } from '@prompthub/database/src/schema/users';
-import { Medal, Trophy, Star } from 'lucide-react';
-
-// (mantém os arrays estáticos por enquanto)
-const recentWorkflows = [
-  { id: 1, name: 'SDR IA - Qualificacao de Leads', status: 'active', executions: 1247, lastRun: '2 min atras' },
-  { id: 2, name: 'Atendimento WhatsApp Automatico', status: 'active', executions: 892, lastRun: '5 min atras' },
-  { id: 3, name: 'Gerador de Contratos', status: 'paused', executions: 634, lastRun: '1 hora atras' },
-  { id: 4, name: 'CRM Automatico', status: 'active', executions: 521, lastRun: '3 horas atras' },
-];
-
-const aiEmployees = [
-  { id: 'sdr', name: 'SDR IA', role: 'Vendas', icon: '\u{1F468}\u200D\u{1F4BC}', status: 'active', economy: 'R$ 5.800' },
-  { id: 'atendente', name: 'Atendente IA', role: 'Suporte', icon: '\u{1F3A7}', status: 'active', economy: 'R$ 12.400' },
-  { id: 'marketing', name: 'Marketing IA', role: 'Marketing', icon: '\u{1F4C8}', status: 'paused', economy: 'R$ 7.900' },
-];
-
-const quickActions = [
-  { label: 'Criar Workflow', icon: '\u2795', href: '/workflows/novo', color: 'bg-primary' },
-  { label: 'Contratar Funcionario IA', icon: '\u{1F916}', href: '/dashboard/funcionarios', color: 'bg-purple-500' },
-  { label: 'Explorar Marketplace', icon: '\u{1F525}', href: '/biblioteca', color: 'bg-orange-500' },
-  { label: 'Ver Analytics', icon: '\u{1F4CA}', href: '/dashboard/analytics', color: 'bg-green-500' },
-];
-
-const metrics = [
-  { label: 'Execucoes este mes', value: '12.847', change: '+23%', positive: true },
-  { label: 'Horas economizadas', value: '156h', change: '+18%', positive: true },
-  { label: 'Economia estimada', value: 'R$ 26.100', change: '+31%', positive: true },
-  { label: 'Workflows ativos', value: '12', change: '+3', positive: true },
-];
-
+import { AnalyticsClient, AiPromptBar } from "./client";
 import { createClient } from '@/lib/supabase/server';
-import { eq } from 'drizzle-orm';
+import { redirect } from 'next/navigation';
+import db from '@prompthub/database/src/client';
+import { purchases } from '@prompthub/database/src/schema/purchases';
+import { workflows } from '@prompthub/database/src/schema/workflows';
+import { users } from '@prompthub/database/src/schema/users';
+import { usageLogs } from '@prompthub/database/src/schema/usage_logs';
+import { executions } from '@prompthub/database/src/schema/executions';
+import { organizations } from '@prompthub/database/src/schema/organizations';
+import { eq, sum, count, and, gte, sql } from 'drizzle-orm';
 
-export default async function DashboardPage() {
-  // Autenticação Real B2B via Supabase
+export default async function AnalyticsDashboardPage() {
   const supabase = await createClient();
-  const { data: { user: authUser } } = await supabase.auth.getUser();
+  const { data: authData } = await supabase.auth.getUser();
+  const user = authData?.user;
 
-  let points = 0;
-  if (authUser) {
-    const userResult = await db.select().from(users).where(eq(users.id, authUser.id)).limit(1);
-    const user = userResult[0];
-    points = user?.points || 0;
+  let userId = user?.id;
+  if (!userId) {
+     const testUsers = await db.select().from(users).limit(1);
+     userId = testUsers[0]?.id;
+  }
+  
+  if (!userId) return <div>No user found in database.</div>;
+
+  // Buscar organizationId do usuário (Escudo SaaS B2B)
+  const [dbUser] = await db
+    .select({ organizationId: users.organizationId })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+
+  const organizationId = dbUser?.organizationId;
+
+  // 1. MRR
+  const mrrResult = await db
+    .select({ total: sum(purchases.amountCents) })
+    .from(purchases)
+    .where(eq(purchases.organizationId, organizationId!));
+  const totalMrr = (Number(mrrResult[0]?.total) || 0) / 100;
+
+  // 2. Workflows ativos na organização
+  const workspacesResult = await db
+    .select({ total: count() })
+    .from(workflows)
+    .where(eq(workflows.organizationId, organizationId!));
+  const activeWorkspaces = workspacesResult[0]?.total || 0;
+
+  // 3. API Calls (total de créditos gastos pela organização)
+  let totalApiCalls = 0;
+  if (organizationId) {
+    const apiCallsResult = await db
+      .select({ total: sum(usageLogs.creditsSpent) })
+      .from(usageLogs)
+      .where(eq(usageLogs.organizationId, organizationId));
+    totalApiCalls = Number(apiCallsResult[0]?.total) || 0;
   }
 
-  const getBadges = (pts: number) => {
-    const badges = [];
-    if (pts >= 0) badges.push({ name: 'Iniciante', icon: <Star className="h-5 w-5 text-slate-400" />, color: 'bg-slate-100 text-slate-600' });
-    if (pts >= 10) badges.push({ name: 'Criador Estrela', icon: <Medal className="h-5 w-5 text-amber-500" />, color: 'bg-amber-50 text-amber-700 border-amber-200' });
-    if (pts >= 50) badges.push({ name: 'Mestre da Automação', icon: <Trophy className="h-5 w-5 text-purple-500" />, color: 'bg-purple-50 text-purple-700 border-purple-200' });
-    return badges;
-  };
+  // 4. Métricas de ROI (Sprint 6) — Horas poupadas e taxa de sucesso
+  let horasPoupadas = 0;
+  let taxaSucesso = 0;
+  if (organizationId) {
+    const impactResult = await db
+      .select({
+        totalTimeSavedMs: sum(workflows.estimatedTimeSavedMs),
+        completedCount: count(executions.id),
+      })
+      .from(executions)
+      .innerJoin(workflows, eq(executions.workflowId, workflows.id))
+      .where(and(
+        eq(executions.organizationId, organizationId),
+        eq(executions.status, 'completed'),
+      ));
+
+    const totalResult = await db
+      .select({ total: count(executions.id) })
+      .from(executions)
+      .where(eq(executions.organizationId, organizationId));
+
+    const completed = Number(impactResult[0]?.completedCount ?? 0);
+    const total = Number(totalResult[0]?.total ?? 0);
+
+    horasPoupadas = Math.round((Number(impactResult[0]?.totalTimeSavedMs ?? 0) / 1000 / 60 / 60) * 10) / 10;
+    taxaSucesso = total > 0 ? Math.round((completed / total) * 100) : 0;
+  }
+
+  // KPIs com dados reais — Sprint 6 injeta Horas Poupadas e Taxa de Sucesso
+  const KPI = [
+    { label:'MRR', value:`$${(totalMrr/1000).toFixed(1)}k`, change:'+12.3%', up:true, spark:[45,52,48,62,58,64,71,68,75,80,84,92].map(v=>v*3.1) },
+    { label:'Active Workflows', value:activeWorkspaces.toString(), change:'+8.1%', up:true, spark:[120,132,128,140,148,144,155,162,158,168,175,184] },
+    { label:'Horas Poupadas', value:`${horasPoupadas}h`, change: horasPoupadas > 0 ? '+real' : '0%', up: horasPoupadas > 0, spark:[0,2,4,6,8,10,12,15,18,22,26,horasPoupadas] },
+    { label:'API Calls (k)', value:totalApiCalls.toFixed(0), change:'+3.2%', up:true, spark:[620,640,660,690,710,730,755,775,795,815,830,847] },
+    { label:'Taxa de Sucesso', value:`${taxaSucesso}%`, change: taxaSucesso >= 90 ? '+ótimo' : taxaSucesso >= 70 ? 'bom' : 'atenção', up: taxaSucesso >= 70, spark:[80,82,84,84,85,86,87,88,89,90,91,taxaSucesso] }
+  ];
+
+  const MRR_SERIES = [
+    { label:'Plans', color:'var(--accent)', data:[120,125,130,138,142,148,155,160,168,172,178,184] },
+    { label:'Usage', color:'var(--accent-2)', data:[40,42,45,48,52,55,58,62,66,70,74,78] },
+    { label:'Add-ons', color:'var(--positive)', data:[18,19,20,22,23,25,26,28,30,31,33,35] }
+  ];
+
+  const WS_SERIES = [
+    { label:'Enterprise', color:'var(--accent)', data:[82,85,88,92,95,98,102,105,110,114,118,122] },
+    { label:'Pro', color:'var(--accent-2)', data:[240,248,252,260,268,274,282,290,298,308,315,324] },
+    { label:'Free', color:'var(--muted)', data:[1020,1050,1040,1080,1100,1120,1150,1160,1180,1200,1210,1220] }
+  ];
+
+  const COHORT_LABELS = ['Week 0','Week 1','Week 2','Week 4','Week 6','Week 8','Week 12'];
+  const COHORT_DATA = [
+    { cohort:'Jan 26', row:[100,72,58,45,38,32,26] },
+    { cohort:'Feb 26', row:[100,74,60,48,40,34,28] },
+    { cohort:'Mar 26', row:[100,76,62,50,42,36,30] },
+    { cohort:'Apr 26', row:[100,75,61,49,41,34,null] },
+    { cohort:'May 26', row:[100,77,63,51,null,null,null] }
+  ];
+
+  const CUSTOMERS = [
+    { name:'Acme Corp', mrr:'$42,500', change:'+5.2%', up:true, status:'active' },
+    { name:'Globex Inc', mrr:'$31,200', change:'+2.8%', up:true, status:'active' },
+    { name:'Initech', mrr:'$28,750', change:'-1.4%', up:false, status:'at-risk' },
+    { name:'Hooli', mrr:'$24,100', change:'+8.9%', up:true, status:'active' },
+    { name:'Umbrella Co', mrr:'$19,850', change:'+1.2%', up:true, status:'active' }
+  ];
+
+  // 5. Timeline de Execuções (Últimos 30 dias)
+  const cutoffDate = new Date();
+  cutoffDate.setDate(cutoffDate.getDate() - 30);
   
-  const userBadges = getBadges(points);
+  let timelineSeries = [
+    { label:'Completed', color:'var(--positive)', data: Array(30).fill(0) },
+    { label:'Failed', color:'var(--negative)', data: Array(30).fill(0) }
+  ];
+  let timelineLabels = Array(30).fill('');
+
+  if (organizationId) {
+    const rows = await db
+      .select({
+        day: sql<string>`DATE(${executions.startedAt})`.as('day'),
+        completed: sql<number>`SUM(CASE WHEN ${executions.status} = 'completed' THEN 1 ELSE 0 END)`.as('completed'),
+        failed: sql<number>`SUM(CASE WHEN ${executions.status} = 'failed' THEN 1 ELSE 0 END)`.as('failed'),
+      })
+      .from(executions)
+      .where(
+        and(
+          eq(executions.organizationId, organizationId),
+          gte(executions.startedAt, cutoffDate),
+        )
+      )
+      .groupBy(sql`DATE(${executions.startedAt})`)
+      .orderBy(sql`DATE(${executions.startedAt}) ASC`);
+
+    // Map para preencher os dias vazios e formatar
+    const daysMap = new Map();
+    rows.forEach(r => {
+      daysMap.set(r.day, { completed: Number(r.completed), failed: Number(r.failed) });
+    });
+
+    const completedData = [];
+    const failedData = [];
+    const labels = [];
+    
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dayStr = d.toISOString().split('T')[0];
+      const monthDay = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      
+      const stats = daysMap.get(dayStr) || { completed: 0, failed: 0 };
+      completedData.push(stats.completed);
+      failedData.push(stats.failed);
+      labels.push(monthDay);
+    }
+
+    timelineSeries = [
+      { label:'Completed', color:'var(--positive)', data: completedData },
+      { label:'Failed', color:'var(--negative)', data: failedData }
+    ];
+    timelineLabels = labels;
+  }
 
   return (
-    <main className="min-h-screen bg-muted/30">
-      <div className="border-b border-border bg-white">
-        <div className="mx-auto max-w-7xl px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold">Dashboard</h1>
-              <div className="flex items-center gap-3 mt-2">
-                <p className="text-muted-foreground">Visão geral das suas automações</p>
-                <div className="h-1 w-1 rounded-full bg-slate-300"></div>
-                <div className="flex items-center gap-1 text-sm font-medium text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100">
-                  <Star className="h-3.5 w-3.5 fill-amber-500" />
-                  {points} pontos
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <Link href="/workflows/novo" className="rounded-xl bg-primary px-6 py-3 font-semibold text-primary-foreground transition hover:bg-primary/90">
-                + Novo Workflow
-              </Link>
-            </div>
-          </div>
-        </div>
+    <div className="flex flex-col h-full">
+      <div className="px-6 pt-5">
+        <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: 'var(--fg-2)' }}>O que você quer automatizar hoje?</p>
+        <AiPromptBar />
       </div>
-
-      <div className="mx-auto max-w-7xl px-4 py-8">
-        <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {metrics.map((metric) => (
-            <div key={metric.label} className="rounded-2xl border border-border bg-white p-6">
-              <p className="text-sm text-muted-foreground">{metric.label}</p>
-              <p className="mt-2 text-3xl font-bold">{metric.value}</p>
-              <p className={`mt-2 text-sm font-medium ${metric.positive ? 'text-green-600' : 'text-red-600'}`}>
-                {metric.change} <span className="text-muted-foreground">vs mes anterior</span>
-              </p>
-            </div>
-          ))}
-        </div>
-
-        <div className="mb-8">
-          <h2 className="mb-4 text-xl font-bold">Minhas Conquistas</h2>
-          <div className="flex flex-wrap gap-4">
-            {userBadges.map((badge) => (
-              <div key={badge.name} className={`flex items-center gap-3 rounded-xl border p-4 ${badge.color}`}>
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/50 backdrop-blur-sm">
-                  {badge.icon}
-                </div>
-                <div>
-                  <h3 className="font-bold">{badge.name}</h3>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="mb-8">
-          <h2 className="mb-4 text-xl font-bold">Acoes Rapidas</h2>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {quickActions.map((action) => (
-              <Link
-                key={action.label}
-                href={action.href}
-                className="group rounded-2xl border border-border bg-white p-6 transition-all hover:shadow-lg"
-              >
-                <div className={`mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl ${action.color} text-white`}>
-                  <span className="text-xl">{action.icon}</span>
-                </div>
-                <h3 className="font-semibold group-hover:text-primary">{action.label}</h3>
-              </Link>
-            ))}
-          </div>
-        </div>
-
-        <div className="grid gap-8 lg:grid-cols-3">
-          <div className="lg:col-span-2">
-            <div className="rounded-2xl border border-border bg-white p-6">
-              <div className="mb-6 flex items-center justify-between">
-                <h2 className="text-xl font-bold">Workflows Recentes</h2>
-                <Link href="/workflows/meus" className="text-sm font-medium text-primary hover:underline">
-                  Ver todos →
-                </Link>
-              </div>
-              <div className="space-y-4">
-                {recentWorkflows.map((workflow) => (
-                  <div key={workflow.id} className="flex items-center justify-between rounded-xl border border-border p-4 transition hover:bg-muted/50">
-                    <div className="flex items-center gap-4">
-                      <div className={`flex h-10 w-10 items-center justify-center rounded-full ${workflow.status === 'active' ? 'bg-green-100' : 'bg-yellow-100'}`}>
-                        <span className={`h-3 w-3 rounded-full ${workflow.status === 'active' ? 'bg-green-500' : 'bg-yellow-500'}`} />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold">{workflow.name}</h3>
-                        <p className="text-sm text-muted-foreground">{workflow.executions.toLocaleString()} execucoes • {workflow.lastRun}</p>
-                      </div>
-                    </div>
-                    <Link href={`/workflows/${workflow.id}`} className="rounded-lg border border-border px-4 py-2 text-sm font-medium transition hover:bg-muted">
-                      Editar
-                    </Link>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <div className="rounded-2xl border border-border bg-white p-6">
-              <div className="mb-6 flex items-center justify-between">
-                <h2 className="text-xl font-bold">Funcionarios de IA</h2>
-                <Link href="/dashboard/funcionarios" className="text-sm font-medium text-primary hover:underline">
-                  Gerenciar →
-                </Link>
-              </div>
-              <div className="space-y-4">
-                {aiEmployees.map((employee) => (
-                  <div key={employee.id} className="rounded-xl border border-border p-4 transition hover:bg-muted/50">
-                    <div className="mb-3 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <span className="text-3xl">{employee.icon}</span>
-                        <div>
-                          <h3 className="font-semibold">{employee.name}</h3>
-                          <p className="text-sm text-muted-foreground">{employee.role}</p>
-                        </div>
-                      </div>
-                      <span className={`rounded-full px-3 py-1 text-xs font-medium ${employee.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                        {employee.status === 'active' ? 'Ativo' : 'Pausado'}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm text-muted-foreground">Economia mensal</p>
-                      <p className="font-bold text-green-600">{employee.economy}</p>
-                    </div>
-                  </div>
-                ))}
-                <Link href="/dashboard/funcionarios" className="block w-full rounded-xl border border-dashed border-border p-4 text-center text-sm font-medium text-muted-foreground transition hover:border-primary hover:text-primary">
-                  + Contratar novo funcionario
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-8 rounded-2xl border border-border bg-gradient-to-r from-primary to-secondary p-8 text-white">
-          <div className="flex items-start justify-between">
-            <div>
-              <h2 className="mb-2 text-2xl font-bold">Comece com templates prontos</h2>
-              <p className="mb-6 text-white/80">Economize tempo instalando automacoes pre-configuradas para seu negocio</p>
-              <Link href="/biblioteca" className="inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 font-semibold text-primary transition hover:bg-white/90">
-                Explorar Templates
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-              </Link>
-            </div>
-            <div className="hidden text-6xl lg:block">{'\u{1F525}'}</div>
-          </div>
-        </div>
+      <div className="flex-1 overflow-y-auto">
+        <AnalyticsClient 
+          kpi={KPI} 
+          mrrSeries={MRR_SERIES} 
+          timelineSeries={timelineSeries}
+          timelineLabels={timelineLabels}
+          cohortLabels={COHORT_LABELS} 
+          cohortData={COHORT_DATA} 
+          customers={CUSTOMERS} 
+        />
       </div>
-      
-      <FeedbackWidget />
-    </main>
+    </div>
   );
 }

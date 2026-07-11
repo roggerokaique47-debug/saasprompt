@@ -1,2 +1,2 @@
-export * from './prompt.js';
-export * from './auth.js';
+export * from './prompt';
+export * from './auth';

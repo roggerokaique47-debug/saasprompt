@@ -1,110 +1,61 @@
 import Link from 'next/link';
-import { ArrowRight, CheckCircle2, Play, Sparkles } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 
 export function Hero() {
   return (
-    <section className="relative overflow-hidden bg-[#0A0A0B] pb-24 pt-32 md:pt-40 text-white">
-      {/* Animated glowing orbs */}
-      <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-        <div className="absolute top-[-10%] h-[500px] w-[500px] rounded-full bg-primary/20 blur-[120px] animate-pulse-glow" />
-        <div className="absolute right-[-5%] top-[20%] h-[400px] w-[400px] rounded-full bg-secondary/15 blur-[100px] animate-pulse-glow" style={{ animationDelay: '1s' }} />
-      </div>
-
-      <div className="relative mx-auto max-w-7xl px-4">
-        <div className="mx-auto max-w-4xl text-center">
-          <div className="animate-fade-in-up mb-8 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-sm font-medium text-slate-300 backdrop-blur-md">
-            <Sparkles className="h-4 w-4 text-primary animate-pulse" />
-            <span className="text-white">1497+ Agent Skills</span> Disponíveis Agora
-          </div>
-
-          <h1 className="animate-fade-in-up mb-6 text-5xl font-extrabold tracking-tight md:text-7xl lg:text-8xl" style={{ animationDelay: '0.1s' }}>
-            A Nova Era da
-            <br />
-            <span className="bg-gradient-to-r from-primary via-indigo-400 to-secondary bg-clip-text text-transparent">
-              Automação Inteligente
-            </span>
+    <section className="relative z-10 overflow-hidden py-24 md:py-32" id="hero">
+      <div className="container relative z-10 grid gap-14 md:grid-cols-2 md:items-center">
+        
+        {/* Text Content */}
+        <div className="animate-fade-in-up">
+          <h1 className="h1 mb-5">
+            Crie fluxos de IA sem digitar uma linha de código.
           </h1>
-
-          <p className="animate-fade-in-up mx-auto mb-10 max-w-2xl text-lg text-slate-400 md:text-xl" style={{ animationDelay: '0.2s' }}>
-            Transforme sua operação com workflows turbinados por IA. Instale habilidades oficiais das maiores empresas do mundo em poucos cliques, sem código.
+          <p className="lead mb-8">
+            Conecte WhatsApp, e-mail, CRM e bancos de dados em minutos. A NovaFlow AI automatiza tarefas repetitivas com agentes inteligentes — tudo em um construtor visual de arrastar e soltar.
           </p>
-
-          <div className="animate-fade-in-up mx-auto mb-12 flex max-w-md flex-col gap-4 sm:flex-row sm:justify-center" style={{ animationDelay: '0.3s' }}>
-            <Link
-              href="/cadastro"
-              className="group inline-flex h-14 items-center justify-center gap-2 rounded-xl bg-primary px-8 text-lg font-semibold text-primary-foreground shadow-[0_0_40px_-10px_rgba(108,92,231,0.5)] transition-all hover:scale-105 hover:bg-primary/90 hover:shadow-[0_0_60px_-15px_rgba(108,92,231,0.7)]"
-            >
-              Começar Grátis
-              <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+          
+          <div className="flex flex-wrap gap-3 mb-8">
+            <Link href="#vip-form" className="btn btn-primary btn-glow group">
+              Garantir Acesso Antecipado
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </Link>
-            <Link
-              href="/workflows"
-              className="inline-flex h-14 items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-8 text-lg font-semibold text-white backdrop-blur-md transition-all hover:bg-white/10 hover:border-white/20"
-            >
-              <Play className="h-5 w-5 fill-white/80" />
-              Ver Demonstração
+            <Link href="#como-funciona" className="btn btn-secondary group">
+              Ver como funciona
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </Link>
           </div>
-
-          <div className="animate-fade-in-up flex flex-wrap justify-center gap-6 text-sm text-slate-400" style={{ animationDelay: '0.4s' }}>
-            <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="h-4 w-4 text-success" />
-              Sem cartão de crédito
-            </span>
-            <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="h-4 w-4 text-success" />
-              Editor visual drag & drop
-            </span>
-            <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="h-4 w-4 text-success" />
-              Ecossistema Open Source
-            </span>
-            <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="h-4 w-4 text-success" />
-              Deploy instantâneo
-            </span>
+          
+          <div className="text-[13px] text-[var(--muted)] flex items-center flex-wrap gap-2 mb-6">
+            <span className="inline-flex items-center gap-1">✓ Criação em 5 minutos</span>
+            <span className="text-[var(--border)]">·</span>
+            <span className="inline-flex items-center gap-1">✓ Sem cartão de crédito</span>
+            <span className="text-[var(--border)]">·</span>
+            <span className="inline-flex items-center gap-1">✓ Templates prontos</span>
           </div>
-        </div>
-
-        {/* Dashboard Preview / Glassmorphism Mockup */}
-        <div className="animate-fade-in-up relative mt-20 mx-auto max-w-5xl animate-float" style={{ animationDelay: '0.5s' }}>
-          <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-primary to-secondary opacity-30 blur-xl"></div>
-          <div className="relative rounded-2xl border border-white/10 bg-[#0A0A0B]/80 p-2 shadow-2xl backdrop-blur-xl">
-            <div className="rounded-xl border border-white/5 bg-[#121214] p-4 md:p-8">
-              <div className="flex items-center justify-between mb-8">
-                <div className="flex gap-2">
-                  <div className="h-3 w-3 rounded-full bg-red-500"></div>
-                  <div className="h-3 w-3 rounded-full bg-yellow-500"></div>
-                  <div className="h-3 w-3 rounded-full bg-green-500"></div>
-                </div>
-                <div className="text-xs font-mono text-slate-500">Agent Flow Execution // US-EAST-1</div>
-              </div>
-              <div className="grid gap-4 md:grid-cols-3">
-                <div className="rounded-lg border border-white/5 bg-white/5 p-4">
-                  <div className="h-10 w-10 rounded-lg bg-blue-500/20 p-2 text-blue-400 mb-4">
-                    <Sparkles className="h-full w-full" />
-                  </div>
-                  <div className="h-4 w-24 rounded bg-white/10 mb-2"></div>
-                  <div className="h-3 w-32 rounded bg-white/5"></div>
-                </div>
-                <div className="rounded-lg border border-white/5 bg-white/5 p-4 opacity-70">
-                  <div className="h-10 w-10 rounded-lg bg-purple-500/20 p-2 text-purple-400 mb-4">
-                    <ArrowRight className="h-full w-full" />
-                  </div>
-                  <div className="h-4 w-20 rounded bg-white/10 mb-2"></div>
-                  <div className="h-3 w-28 rounded bg-white/5"></div>
-                </div>
-                <div className="rounded-lg border border-white/5 bg-white/5 p-4 opacity-50">
-                  <div className="h-10 w-10 rounded-lg bg-emerald-500/20 p-2 text-emerald-400 mb-4">
-                    <CheckCircle2 className="h-full w-full" />
-                  </div>
-                  <div className="h-4 w-16 rounded bg-white/10 mb-2"></div>
-                  <div className="h-3 w-24 rounded bg-white/5"></div>
-                </div>
-              </div>
+          
+          <div className="animate-fade-in-up mt-5 flex items-center gap-2.5 text-[14px] text-[var(--accent)] p-2.5 px-4 rounded-lg bg-[var(--accent-soft)] border border-[color-mix(in_oklch,var(--accent)_25%,transparent)]">
+            <span className="text-[20px]">🎯</span>
+            <div>
+              <strong className="text-[var(--fg)]">1.000 créditos gratuitos</strong> — apenas para os 100 primeiros cadastros
             </div>
           </div>
         </div>
+
+        {/* Visual Mockup */}
+        <div className="animate-fade-in-up relative mx-auto w-full max-w-[500px] aspect-video md:aspect-square flex items-center justify-center" style={{ animationDelay: '0.2s' }}>
+          <div className="absolute inset-0 rounded-2xl bg-[var(--accent-soft)] blur-3xl opacity-50"></div>
+          <div className="relative w-full h-[300px] md:h-full max-h-[400px] rounded-2xl border border-[var(--border)] bg-[color-mix(in_oklch,var(--surface)_60%,transparent)] backdrop-blur-xl shadow-2xl flex items-center justify-center animate-float">
+            <div className="absolute inset-0 rounded-2xl p-[1px] bg-gradient-to-br from-[var(--accent)] via-transparent to-[var(--accent)] opacity-20 pointer-events-none"></div>
+            <svg width="60" height="60" viewBox="0 0 60 60" fill="none" className="opacity-30 text-[var(--fg)]">
+              <rect x="2" y="2" width="56" height="56" rx="8" stroke="currentColor" strokeWidth="1.5"/>
+              <path d="M18 20h24M18 30h16M18 40h20" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              <circle cx="46" cy="20" r="3" fill="var(--accent)" opacity="0.6"/>
+              <circle cx="46" cy="40" r="3" fill="var(--accent)" opacity="0.6"/>
+            </svg>
+          </div>
+        </div>
+
       </div>
     </section>
   );

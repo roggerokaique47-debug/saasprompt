@@ -24,39 +24,45 @@ export async function POST(req: Request) {
       return NextResponse.json({ received: true, status: 'ignored' });
     }
 
-    const { userId, action, plan, subscriptionId, status, currentPeriodStart, currentPeriodEnd } = normalizedEvent;
+    const { organizationId, action, plan, subscriptionId, status, currentPeriodStart, currentPeriodEnd } = normalizedEvent;
 
     switch (action) {
       case 'ACTIVATE_SUBSCRIPTION': {
-        if (userId && subscriptionId && plan) {
+        if (organizationId && subscriptionId && plan) {
           await db.insert(subscriptions).values({
-            userId,
+            organizationId,
             plan: plan,
             stripeSubscriptionId: subscriptionId, // Opcional: futuramente renomear no db para gatewaySubscriptionId
             status: status,
             currentPeriodStart: currentPeriodStart!,
             currentPeriodEnd: currentPeriodEnd!,
-          }).onConflictDoNothing({ target: subscriptions.userId });
+          }).onConflictDoNothing({ target: subscriptions.organizationId });
+
+          // Escudo SaaS: Sincronizar o plano na tabela organizations
+          const { organizations } = await import('@prompthub/database/src/schema/organizations');
+          await db.update(organizations)
+            .set({ plan: plan })
+            .where(eq(organizations.id, organizationId));
         }
         break;
       }
       case 'UPDATE_SUBSCRIPTION': {
-        if (userId) {
+        if (organizationId) {
           await db.update(subscriptions)
             .set({
               status: status,
               currentPeriodStart: currentPeriodStart!,
               currentPeriodEnd: currentPeriodEnd!,
             })
-            .where(eq(subscriptions.userId, userId));
+            .where(eq(subscriptions.organizationId, organizationId));
         }
         break;
       }
       case 'CANCEL_SUBSCRIPTION': {
-        if (userId) {
+        if (organizationId) {
           await db.update(subscriptions)
             .set({ status: 'canceled', plan: 'free' })
-            .where(eq(subscriptions.userId, userId));
+            .where(eq(subscriptions.organizationId, organizationId));
         }
         break;
       }
@@ -71,9 +77,14 @@ export async function POST(req: Request) {
       case 'ONE_TIME_PURCHASE': {
         // Logica para compra unica, caso seja retornado pelo provider no futuro
         const { contentType, contentId, priceCents, paymentIntentId } = normalizedEvent;
-        if (userId && contentType && contentId && priceCents) {
+        // As compras ainda precisam registrar quem fez, mas o crédito vai pra organização
+        // Como o webhook event NormalizedPaymentEvent atualmente tem apenas organizationId,
+        // vamos registrar o userId como um fallback se tivermos (atualmente não temos fácil sem quebrar a assinatura).
+        // Vamos apenas usar organizationId.
+        if (organizationId && contentType && contentId && priceCents) {
           await db.insert(purchases).values({
-            userId,
+            userId: organizationId, // fallback temporario se o DB exigir (vamos alterar compras depois se preciso)
+            organizationId,
             contentType,
             contentId,
             amountCents: priceCents,
@@ -82,6 +93,21 @@ export async function POST(req: Request) {
             stripePaymentIntentId: paymentIntentId || '',
             status: 'completed',
           }).onConflictDoNothing();
+
+          // Escudo SaaS: Creditar tokens avulsos (ex: Lifetime Deal ou Pacote de IA)
+          // Na fase 5 adotamos o plano "lifetime" como compra avulsa também
+          const { organizations } = await import('@prompthub/database/src/schema/organizations');
+          const { sql } = await import('drizzle-orm');
+          
+          if (contentId === 'lifetime') {
+            await db.update(organizations)
+              .set({ plan: 'lifetime', credits: sql`${organizations.credits} + 1000` })
+              .where(eq(organizations.id, organizationId));
+          } else if (contentType === 'tokens') {
+            await db.update(organizations)
+              .set({ credits: sql`${organizations.credits} + 500` })
+              .where(eq(organizations.id, organizationId));
+          }
         }
         break;
       }

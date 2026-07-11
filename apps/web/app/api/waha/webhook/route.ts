@@ -1,18 +1,34 @@
 import { NextResponse } from 'next/server';
 import client from '@prompthub/database/src/client';
-import { workflows } from '@prompthub/database/src/schema';
-import { desc, sql } from 'drizzle-orm';
+import { workflows } from '@prompthub/database/src/schema/workflows';
+import { agents } from '@prompthub/database/src/schema/agents';
+import { desc, sql, eq } from 'drizzle-orm';
+
+import { WahaWebhookSchema } from '@prompthub/shared/src/validations/apiSchema';
 
 // O webhook que o WAHA vai chamar
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
+    let bodyRaw;
+    try {
+      bodyRaw = await req.json();
+    } catch (e) {
+      return NextResponse.json({ status: 'ignored' }, { status: 200 }); // WAHA keeps trying if not 200
+    }
+
+    const parsed = WahaWebhookSchema.safeParse(bodyRaw);
+    if (!parsed.success) {
+      return NextResponse.json({ status: 'ignored' }, { status: 200 });
+    }
+
+    const body = parsed.data;
 
     // Validar se é uma mensagem recebida
     if (body.event !== 'message' || !body.payload) {
       return NextResponse.json({ status: 'ignored' }, { status: 200 });
     }
 
+    const wahaSession = body.session || 'default';
     const { from, body: messageText, fromMe } = body.payload;
 
     // Não responder as próprias mensagens para não dar loop infinito
@@ -50,7 +66,7 @@ export async function POST(req: Request) {
           await fetch('http://127.0.0.1:3002/api/sendText', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Api-Key': '123' },
-            body: JSON.stringify({ chatId: from, text: reply, session: 'default' })
+            body: JSON.stringify({ chatId: from, text: reply, session: wahaSession })
           });
 
           return NextResponse.json({ status: 'workflow_executed', result }, { status: 200 });
@@ -60,7 +76,29 @@ export async function POST(req: Request) {
       }
     }
 
-    // --- FASE 1: PERCEPÇÃO E CONSULTA AO BANCO DE DADOS (RAG) ---
+    // --- FASE 1: IDENTIFICAR USUÁRIO DA SESSÃO ---
+    let userId = null;
+    if (wahaSession.startsWith('session_')) {
+      userId = wahaSession.replace('session_', '');
+    }
+
+    // Buscar Agente contratado pelo usuário para atuar como cérebro
+    let agentPrompt = '';
+    if (userId) {
+      try {
+        const [activeAgent] = await client.select()
+          .from(agents)
+          .where(sql`${agents.authorId} = ${userId} AND ${agents.title} LIKE '%(Ativo)%'`)
+          .limit(1);
+        
+        if (activeAgent) {
+          console.log(`[WAHA] Agente customizado encontrado para o user ${userId}: ${activeAgent.title}`);
+          agentPrompt = activeAgent.content;
+        }
+      } catch (err) {
+        console.error('[WAHA AGENT ERROR]', err);
+      }
+    }
     const textLower = messageText.toLowerCase();
     let dbContext = '';
 
@@ -96,7 +134,12 @@ export async function POST(req: Request) {
     const openaiApiBase = process.env.OPENAI_API_BASE || 'http://127.0.0.1:1234/v1';
     let generatedText = "Desculpe, meu cérebro (LM Studio) parece estar desligado no momento.";
 
-    const systemPrompt = `Você é um assistente virtual atencioso, curto e direto. Seu nome é NovaFlow AI. Você está ajudando a testar a integração do WhatsApp.
+    let basePrompt = `Você é um assistente virtual atencioso, curto e direto. Seu nome é NovaFlow AI. Você está ajudando a testar a integração do WhatsApp.`;
+    if (agentPrompt) {
+      basePrompt = agentPrompt;
+    }
+
+    const systemPrompt = `${basePrompt}
 ${dbContext ? `\nIMPORTANTE: Responda a dúvida do usuário baseado nesta informação real do sistema:\n${dbContext}` : ''}`;
 
     try {
@@ -140,7 +183,7 @@ ${dbContext ? `\nIMPORTANTE: Responda a dúvida do usuário baseado nesta inform
       body: JSON.stringify({
         chatId: from,
         text: generatedText,
-        session: 'default'
+        session: wahaSession
       })
     });
 

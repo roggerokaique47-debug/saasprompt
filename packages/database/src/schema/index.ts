@@ -10,11 +10,14 @@ export * from './subscriptions';
 export * from './articles';
 
 export * from './workflows';
+export * from './workflow_versions';
 export * from './purchases';
 export * from './payouts';
 export * from './skills';
 export * from './agents';
+export * from './agent_workflows';
 export * from './executions';
+export * from './execution_steps';
 export * from './node-logs';
 export * from './integrations';
 export * from './api_keys';
@@ -22,3 +25,12 @@ export * from './workflow_reviews';
 export * from './leads';
 export * from './feedbacks';
 export * from './usage_logs';
+export * from './affiliates';
+export * from './organizations';
+export * from './organization_invites';
+export * from './credentials';
+export * from './webhook_endpoints';
+export * from './audit_logs';
+export * from './templates';
+
+export * from './templates';

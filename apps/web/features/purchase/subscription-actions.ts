@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import db from '@prompthub/database/src/client';
+import { users } from '@prompthub/database/src/schema/users';
 import { subscriptions } from '@prompthub/database/src/schema/subscriptions';
 import { eq } from 'drizzle-orm';
 import { PaymentFactory, PaymentPlan } from '@prompthub/payments';
@@ -11,16 +12,19 @@ export async function createSubscriptionCheckout(plan: string) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: 'Usuário não autenticado' };
 
+  // Escudo SaaS: Buscar organizationId do usuário
+  const [dbUser] = await db.select({ organizationId: users.organizationId }).from(users).where(eq(users.id, user.id)).limit(1);
+  const organizationId = dbUser?.organizationId;
+  if (!organizationId) return { error: 'Usuário não vinculado a uma organização' };
+
   const origin = process.env.NEXT_PUBLIC_URL || 'http://localhost:3000';
   const provider = PaymentFactory.getProvider();
 
-  // O botão de checkout originalmente passava priceId, vamos normalizar para passar o 'plan'
-  // Mas como a interface CheckoutButton espera passar o plano agora, nós mapeamos.
   const validPlan: PaymentPlan = (plan === 'pro' || plan === 'team' || plan === 'enterprise') ? plan : 'pro';
 
   try {
     const url = await provider.createCheckoutSession({
-      userId: user.id,
+      organizationId,
       plan: validPlan,
       successUrl: `${origin}/dashboard?checkout=success`,
       cancelUrl: `${origin}/preco?checkout=canceled`,
@@ -37,10 +41,14 @@ export async function createPortalSession() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: 'Usuário não autenticado' };
 
+  const [dbUser] = await db.select({ organizationId: users.organizationId }).from(users).where(eq(users.id, user.id)).limit(1);
+  const organizationId = dbUser?.organizationId;
+  if (!organizationId) return { error: 'Usuário não vinculado a uma organização' };
+
   const [sub] = await db
     .select()
     .from(subscriptions)
-    .where(eq(subscriptions.userId, user.id))
+    .where(eq(subscriptions.organizationId, organizationId))
     .limit(1);
 
   if (!sub?.stripeSubscriptionId) return { error: 'Nenhuma assinatura ativa' };
@@ -61,10 +69,14 @@ export async function getUserPlan() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { plan: 'free' };
 
+  const [dbUser] = await db.select({ organizationId: users.organizationId }).from(users).where(eq(users.id, user.id)).limit(1);
+  const organizationId = dbUser?.organizationId;
+  if (!organizationId) return { plan: 'free' };
+
   const [sub] = await db
     .select()
     .from(subscriptions)
-    .where(eq(subscriptions.userId, user.id))
+    .where(eq(subscriptions.organizationId, organizationId))
     .limit(1);
 
   if (!sub || sub.status !== 'active') return { plan: 'free' };

@@ -42,8 +42,19 @@ export async function saveWorkflow(data: {
     revalidatePath(`/workflows/${data.id}`);
     return { id: data.id };
   }
+  // Obter ou criar org
+  const { organizations } = await import('@prompthub/database/src/schema/organizations');
+  let [org] = await db.select().from(organizations).where(eq(organizations.ownerId, user.id)).limit(1);
+  if (!org) {
+    [org] = await db.insert(organizations).values({
+      name: 'My Workspace',
+      slug: `workspace-${user.id.slice(0,8)}`,
+      ownerId: user.id,
+    }).returning();
+  }
 
   const [workflow] = await db.insert(workflows).values({
+    organizationId: org.id,
     title: data.title,
     slug,
     description: data.description,
@@ -101,4 +112,18 @@ export async function runWorkflow(workflowId: string) {
 
   revalidatePath(`/workflows/${workflowId}`);
   return { executionId: result.executionId, success: result.success };
+}
+
+export async function simulateWorkflow(workflowJson: WorkflowDefinition) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: 'Não autenticado' };
+
+  try {
+    const { executeWorkflow } = await import('@prompthub/engine');
+    const result = await executeWorkflow(workflowJson, { userId: user.id });
+    return { success: true, result };
+  } catch (error: any) {
+    return { error: error.message || 'Erro ao simular workflow' };
+  }
 }

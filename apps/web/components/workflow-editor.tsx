@@ -2,26 +2,27 @@
 
 import { useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import type { WorkflowNode, WorkflowEdge, WorkflowDefinition, NodeType as NodeTypeEnum } from '@prompthub/engine';
-import { NodeType } from '@prompthub/engine';
+import type { WorkflowNode, WorkflowEdge, WorkflowDefinition } from '@prompthub/engine';
 import { saveWorkflow, runWorkflow } from '@/features/workflows/workflow-actions';
 
 const nodeTypes = [
-  { type: NodeType.WEBHOOK, label: 'Webhook', icon: '\u{1F4E5}', color: 'bg-violet-100 text-violet-700 border-violet-200' },
-  { type: NodeType.SCHEDULE, label: 'Schedule', icon: '\u23F0', color: 'bg-orange-100 text-orange-700 border-orange-200' },
-  { type: NodeType.HTTP_REQUEST, label: 'HTTP Request', icon: '\u{1F310}', color: 'bg-blue-100 text-blue-700 border-blue-200' },
-  { type: NodeType.OPENAI, label: 'OpenAI', icon: '\u{1F916}', color: 'bg-green-100 text-green-700 border-green-200' },
-  { type: NodeType.GMAIL_SEND, label: 'Gmail', icon: '\u{1F4E7}', color: 'bg-red-100 text-red-700 border-red-200' },
-  { type: NodeType.GOOGLE_SHEETS_WRITE, label: 'Google Sheets', icon: '\u{1F4CA}', color: 'bg-emerald-100 text-emerald-700 border-emerald-200' },
-  { type: NodeType.WHATSAPP_SEND, label: 'WhatsApp', icon: '\u{1F4AC}', color: 'bg-green-100 text-green-700 border-green-200' },
-  { type: NodeType.FILTER, label: 'Filter', icon: '\u{1F50D}', color: 'bg-yellow-100 text-yellow-700 border-yellow-200' },
-  { type: NodeType.CODE, label: 'Code', icon: '\u{1F4BB}', color: 'bg-gray-100 text-gray-700 border-gray-200' },
-  { type: NodeType.DELAY, label: 'Delay', icon: '\u23F1\uFE0F', color: 'bg-purple-100 text-purple-700 border-purple-200' },
-  { type: NodeType.SLACK_SEND, label: 'Slack', icon: '\u{1F4AC}', color: 'bg-pink-100 text-pink-700 border-pink-200' },
-  { type: NodeType.EMAIL_SMTP, label: 'SMTP Email', icon: '\u2709\uFE0F', color: 'bg-indigo-100 text-indigo-700 border-indigo-200' },
+  { type: 'webhook', label: 'Webhook', icon: '📥', color: 'bg-violet-100 text-violet-700 border-violet-200' },
+  { type: 'schedule', label: 'Schedule', icon: '⏰', color: 'bg-orange-100 text-orange-700 border-orange-200' },
+  { type: 'http_request', label: 'HTTP Request', icon: '🌐', color: 'bg-blue-100 text-blue-700 border-blue-200' },
+  { type: 'openai', label: 'OpenAI', icon: '🤖', color: 'bg-green-100 text-green-700 border-green-200' },
+  { type: 'gmail_send', label: 'Gmail', icon: '📧', color: 'bg-red-100 text-red-700 border-red-200' },
+  { type: 'google_sheets_write', label: 'Google Sheets', icon: '📊', color: 'bg-emerald-100 text-emerald-700 border-emerald-200' },
+  { type: 'whatsapp_send', label: 'WhatsApp', icon: '💬', color: 'bg-green-100 text-green-700 border-green-200' },
+  { type: 'filter', label: 'Filter', icon: '🔍', color: 'bg-yellow-100 text-yellow-700 border-yellow-200' },
+  { type: 'code', label: 'Code', icon: '💻', color: 'bg-gray-100 text-gray-700 border-gray-200' },
+  { type: 'delay', label: 'Delay', icon: '⏱️', color: 'bg-purple-100 text-purple-700 border-purple-200' },
+  { type: 'slack_send', label: 'Slack', icon: '💬', color: 'bg-pink-100 text-pink-700 border-pink-200' },
+  { type: 'email_smtp', label: 'SMTP Email', icon: '✉️', color: 'bg-indigo-100 text-indigo-700 border-indigo-200' },
 ];
 
-type CanvasNode = WorkflowNode & { x: number; y: number };
+export type NodeType = 'webhook' | 'schedule' | 'http_request' | 'openai' | 'gmail_send' | 'gmail_read' | 'google_sheets_read' | 'google_sheets_write' | 'whatsapp_send' | 'filter' | 'merge' | 'code' | 'delay' | 'switch' | 'slack_send' | 'discord_send' | 'email_smtp' | 'hubspot_create_contact' | 'typeform_read' | 'notion_create_page' | 'google_drive_upload';
+
+type CanvasNode = WorkflowNode & { x: number; y: number; type: NodeType };
 
 export function WorkflowEditor({ initialWorkflow }: { initialWorkflow?: WorkflowDefinition }) {
   const router = useRouter();
@@ -371,44 +372,44 @@ function renderNodeConfig(
   updateConfig: (id: string, key: string, value: unknown) => void
 ) {
   const configs: Record<string, { key: string; label: string; type: string; placeholder?: string }[]> = {
-    [NodeType.WEBHOOK]: [{ key: 'method', label: 'Method', type: 'select' }],
-    [NodeType.OPENAI]: [
+    ['webhook']: [{ key: 'method', label: 'Method', type: 'select' }],
+    ['openai']: [
       { key: 'prompt', label: 'Prompt', type: 'textarea', placeholder: 'Digite o prompt...' },
       { key: 'model', label: 'Model', type: 'select' },
     ],
-    [NodeType.HTTP_REQUEST]: [
+    ['http_request']: [
       { key: 'url', label: 'URL', type: 'text', placeholder: 'https://...' },
       { key: 'method', label: 'Method', type: 'select' },
     ],
-    [NodeType.GMAIL_SEND]: [
+    ['gmail_send']: [
       { key: 'to', label: 'Para', type: 'text', placeholder: 'email@exemplo.com' },
       { key: 'subject', label: 'Assunto', type: 'text', placeholder: 'Assunto do email' },
       { key: 'body', label: 'Corpo', type: 'textarea', placeholder: 'Conteudo do email...' },
     ],
-    [NodeType.GOOGLE_SHEETS_WRITE]: [
+    ['google_sheets_write']: [
       { key: 'spreadsheetId', label: 'Planilha ID', type: 'text', placeholder: 'ID da planilha' },
       { key: 'range', label: 'Intervalo', type: 'text', placeholder: 'A1:Z100' },
     ],
-    [NodeType.WHATSAPP_SEND]: [
+    ['whatsapp_send']: [
       { key: 'to', label: 'Telefone', type: 'text', placeholder: '+5511999999999' },
       { key: 'message', label: 'Mensagem', type: 'textarea', placeholder: 'Texto da mensagem...' },
     ],
-    [NodeType.FILTER]: [
+    ['filter']: [
       { key: 'field', label: 'Campo', type: 'text', placeholder: 'campo' },
       { key: 'condition', label: 'Condicao', type: 'select' },
       { key: 'value', label: 'Valor', type: 'text', placeholder: 'Valor para comparar' },
     ],
-    [NodeType.CODE]: [
+    ['code']: [
       { key: 'code', label: 'Codigo', type: 'textarea', placeholder: 'return { result: input.data }' },
     ],
-    [NodeType.DELAY]: [
+    ['delay']: [
       { key: 'durationMs', label: 'Duracao (ms)', type: 'number' },
     ],
-    [NodeType.SLACK_SEND]: [
+    ['slack_send']: [
       { key: 'webhookUrl', label: 'Webhook URL', type: 'text', placeholder: 'https://hooks.slack.com/...' },
       { key: 'channel', label: 'Canal', type: 'text', placeholder: '#geral' },
     ],
-    [NodeType.EMAIL_SMTP]: [
+    ['email_smtp']: [
       { key: 'to', label: 'Para', type: 'text', placeholder: 'email@exemplo.com' },
       { key: 'subject', label: 'Assunto', type: 'text', placeholder: 'Assunto' },
       { key: 'body', label: 'Corpo', type: 'textarea', placeholder: 'Conteudo do email...' },

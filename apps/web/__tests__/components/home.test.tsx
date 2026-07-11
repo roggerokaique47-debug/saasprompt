@@ -34,18 +34,18 @@ describe('HomePage', () => {
   it('renders the hero heading', async () => {
     const Component = await Home();
     render(Component);
-    expect(screen.getByText(/Biblioteca de Prompts/i)).toBeInTheDocument();
+    expect(screen.getByText(/Crie fluxos de IA/i)).toBeInTheDocument();
   });
 
   it('renders explorar button', async () => {
     const Component = await Home();
     render(Component);
-    expect(screen.getAllByText('Explorar Biblioteca').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText(/Ver como funciona/i).length).toBeGreaterThanOrEqual(1);
   });
 
   it('renders CTA section', async () => {
     const Component = await Home();
     render(Component);
-    expect(screen.getByText('Cadastre-se Grátis')).toBeInTheDocument();
+    expect(screen.getAllByText(/Garantir Acesso Antecipado/i).length).toBeGreaterThanOrEqual(1);
   });
 });

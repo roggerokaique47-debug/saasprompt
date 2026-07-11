@@ -1,5 +1,6 @@
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
+import { ParticleBackground } from '@/components/particle-background';
 
 export default function PublicLayout({
   children,
@@ -8,8 +9,9 @@ export default function PublicLayout({
 }) {
   return (
     <>
+      <ParticleBackground />
       <Header />
-      <div className="flex-1">{children}</div>
+      <div className="flex-1 relative z-10">{children}</div>
       <Footer />
     </>
   );

@@ -1,14 +1,28 @@
 import type { Metadata } from 'next';
 import db from '@prompthub/database/src/client';
 import { users } from '@prompthub/database/src/schema/users';
-import { desc } from 'drizzle-orm';
+import { desc, eq } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = { title: 'Usuários' };
 
+import { organizations } from '@prompthub/database/src/schema/organizations';
+
 export default async function AdminUsuariosPage() {
-  const allUsers = await db.select().from(users).orderBy(desc(users.createdAt)).limit(100);
+  const allUsers = await db
+    .select({
+      id: users.id,
+      name: users.name,
+      email: users.email,
+      locale: users.locale,
+      createdAt: users.createdAt,
+      plan: organizations.plan,
+    })
+    .from(users)
+    .leftJoin(organizations, eq(users.organizationId, organizations.id))
+    .orderBy(desc(users.createdAt))
+    .limit(100);
 
   return (
     <div>
@@ -29,7 +43,7 @@ export default async function AdminUsuariosPage() {
               <tr key={u.id} className="border-b border-border last:border-0">
                 <td className="px-4 py-3 font-medium">{u.name}</td>
                 <td className="px-4 py-3 text-muted-foreground">{u.email}</td>
-                <td className="px-4 py-3 capitalize">{u.plan}</td>
+                <td className="px-4 py-3 capitalize">{u.plan || 'Free'}</td>
                 <td className="px-4 py-3 text-muted-foreground">{u.locale}</td>
                 <td className="px-4 py-3 text-muted-foreground">
                   {u.createdAt.toLocaleDateString('pt-BR')}

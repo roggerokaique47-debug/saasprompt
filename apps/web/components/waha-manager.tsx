@@ -16,10 +16,10 @@ export function WahaManager() {
         const data = await res.json();
         setSessions(data);
         
-        // Se a sessão default estiver no estado SCAN_QR_CODE, ativa o polling do QR
-        const defaultSession = data.find((s: any) => s.name === 'default');
-        if (defaultSession?.status === 'SCAN_QR_CODE') {
-          setQrCodeUrl(`/api/waha/qr?session=default&t=${Date.now()}`); // Cache buster
+        // Se a sessão principal estiver no estado SCAN_QR_CODE, ativa o polling do QR
+        const userSession = data.length > 0 ? data[0] : null;
+        if (userSession?.status === 'SCAN_QR_CODE') {
+          setQrCodeUrl(`/api/waha/sessions/${userSession.name}/qr?t=${Date.now()}`); // Cache buster
         } else {
           setQrCodeUrl(null);
         }
@@ -42,7 +42,7 @@ export function WahaManager() {
     setLoading(true);
     await fetch('/api/waha/sessions', {
       method: 'POST',
-      body: JSON.stringify({ name: 'default' }),
+      body: JSON.stringify({}),
       headers: { 'Content-Type': 'application/json' }
     });
     fetchSessions();
@@ -50,16 +50,16 @@ export function WahaManager() {
 
   const handleStopSession = async () => {
     setLoading(true);
-    await fetch('/api/waha/sessions?name=default', {
+    await fetch('/api/waha/sessions', {
       method: 'DELETE',
     });
     fetchSessions();
   };
 
-  const defaultSession = sessions.find(s => s.name === 'default');
-  const isWorking = defaultSession?.status === 'WORKING';
-  const isScanning = defaultSession?.status === 'SCAN_QR_CODE';
-  const isStarting = defaultSession?.status === 'STARTING';
+  const userSession = sessions.length > 0 ? sessions[0] : null;
+  const isWorking = userSession?.status === 'WORKING';
+  const isScanning = userSession?.status === 'SCAN_QR_CODE';
+  const isStarting = userSession?.status === 'STARTING';
 
   return (
     <div className="w-full max-w-4xl mx-auto space-y-6">
@@ -100,7 +100,7 @@ export function WahaManager() {
           </p>
 
           <div className="flex space-x-4">
-            {!defaultSession || (!isWorking && !isScanning && !isStarting) ? (
+            {!userSession || (!isWorking && !isScanning && !isStarting) ? (
               <button 
                 onClick={handleStartSession}
                 className="flex items-center justify-center gap-2 w-full py-3 px-4 bg-indigo-500 hover:bg-indigo-600 text-white font-medium rounded-xl transition-all"

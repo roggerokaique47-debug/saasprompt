@@ -6,6 +6,14 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "dependencies": {
+    "@opentelemetry/api": "^1.9.1",
+    "@prompthub/nodes": "workspace:*",
+    "@prompthub/shared": "workspace:*",
+    "bullmq": "^5.80.1",
+    "ioredis": "^5.11.1",
     "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.3"
   }
 }

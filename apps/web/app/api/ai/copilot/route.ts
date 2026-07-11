@@ -1,13 +1,23 @@
 import { NextResponse } from 'next/server';
-import { NodeType } from '@prompthub/engine/src/nodes';
+import { NodeType } from '@prompthub/engine';
+
+import { AiCopilotSchema } from '@prompthub/shared/src/validations/apiSchema';
 
 export async function POST(req: Request) {
   try {
-    const { nodes, edges } = await req.json();
-
-    if (!nodes) {
-      return NextResponse.json({ error: 'Nodes are required' }, { status: 400 });
+    let body;
+    try {
+      body = await req.json();
+    } catch (e) {
+      return NextResponse.json({ error: 'Invalid JSON payload' }, { status: 400 });
     }
+
+    const parsed = AiCopilotSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Validation failed', details: parsed.error.format() }, { status: 400 });
+    }
+
+    const { nodes, edges } = parsed.data;
 
     // 1. Autenticação B2B via Supabase
     const { createClient } = await import('@/lib/supabase/server');
@@ -22,15 +32,24 @@ export async function POST(req: Request) {
     const { eq } = await import('drizzle-orm');
     const db = (await import('@prompthub/database/src/client')).default;
     const { users } = await import('@prompthub/database/src/schema/users');
+    const { organizations } = await import('@prompthub/database/src/schema/organizations');
 
     const userResult = await db.select().from(users).where(eq(users.id, user.id)).limit(1);
     const dbUser = userResult.length > 0 ? userResult[0] : null;
+    const organizationId = dbUser?.organizationId;
+
+    if (!organizationId) {
+      return NextResponse.json({ error: 'Usuário não vinculado a uma organização.' }, { status: 403 });
+    }
+
+    const orgResult = await db.select().from(organizations).where(eq(organizations.id, organizationId)).limit(1);
+    const dbOrg = orgResult.length > 0 ? orgResult[0] : null;
 
     const hasCustomKey = dbUser?.customAiKey && dbUser.customAiKey.trim().length > 0;
 
-    if (!hasCustomKey && (!dbUser || dbUser.credits < 1)) {
+    if (!hasCustomKey && (!dbOrg || dbOrg.credits < 1)) {
       return NextResponse.json(
-        { error: 'Créditos insuficientes para usar o Copilot. Adicione tokens ou configure sua própria chave (Plano Enterprise).' },
+        { error: 'Créditos insuficientes para usar o Copilot. Adicione tokens na organização ou configure sua própria chave (Plano Enterprise).' },
         { status: 402 } // 402 Payment Required
       );
     }
@@ -90,25 +109,27 @@ Return ONLY a valid JSON object with exactly these fields, and nothing else (no 
       content = content.replace(/^\`\`\`/, '').replace(/\`\`\`$/, '').trim();
     }
 
-    const parsed = JSON.parse(content);
-    const { usageLogs } = await import('@prompthub/database/src/schema/usage_logs');
+    const llmParsed = JSON.parse(content);
 
     if (!hasCustomKey) {
-      // 3. Escudo SaaS: Cobrança Atômica (Debitar 1 token)
-      await db.update(users)
-        .set({ credits: dbUser!.credits - 1 })
-        .where(eq(users.id, user.id));
+      // 3. Escudo SaaS: Cobrança Atômica (Debitar 1 token da organizacao)
+      await db.update(organizations)
+        .set({ credits: dbOrg!.credits - 1 })
+        .where(eq(organizations.id, organizationId));
     }
 
     // 4. Central de Distribuição: Registrar Log de Uso
-    await db.insert(usageLogs).values({
-      userId: user.id,
-      action: 'ai_copilot',
-      tokensSpent: hasCustomKey ? 0 : 1,
-      keyType: hasCustomKey ? 'byok' : 'system'
-    });
+    const { usageLogs } = await import('@prompthub/database/src/schema/usage_logs');
+    if (organizationId) {
+      await db.insert(usageLogs).values({
+        organizationId: organizationId,
+        action: 'ai_copilot',
+        creditsSpent: hasCustomKey ? 0 : 1,
+        keyType: hasCustomKey ? 'byok' : 'system'
+      });
+    }
 
-    return NextResponse.json(parsed);
+    return NextResponse.json(llmParsed);
   } catch (error) {
     console.error('Failed to generate Copilot suggestion:', error);
     return NextResponse.json({ error: 'Internal Server Error', details: (error as Error).message }, { status: 500 });

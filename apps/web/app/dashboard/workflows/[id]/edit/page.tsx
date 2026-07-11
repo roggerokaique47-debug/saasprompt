@@ -3,6 +3,7 @@ import db from '@prompthub/database/src/client';
 import { workflows } from '@prompthub/database/src/schema/workflows';
 import { eq } from 'drizzle-orm';
 import { WorkflowEditor } from '@/features/workflows/components/editor/workflow-editor';
+import { AdBanner } from '@/components/monetization/ad-banner';
 
 interface EditWorkflowPageProps {
   params: { id: string };
@@ -13,6 +14,8 @@ export default async function EditWorkflowPage({ params }: { params: Promise<{ i
 
   let initialNodes = [];
   let initialEdges = [];
+  let initialTitle = 'Novo Workflow';
+  let initialDescription = '';
   
   if (workflowId !== 'novo') {
     const workflowResult = await db.select().from(workflows).where(eq(workflows.id, workflowId)).limit(1);
@@ -29,18 +32,23 @@ export default async function EditWorkflowPage({ params }: { params: Promise<{ i
         initialNodes = (definition as any).nodes || [];
         initialEdges = (definition as any).edges || [];
       }
+      initialTitle = workflow.title || 'Novo Workflow';
+      initialDescription = workflow.description || '';
     } catch (e) {
       console.error('Failed to parse workflow definition', e);
     }
   }
 
-  // ToDo: Implement the save function to call a Server Action or API route
-
   return (
     <div className="flex flex-col h-full w-full overflow-hidden">
-      <div className="flex-1 relative">
+      <div className="px-6 pt-4 z-10">
+        <AdBanner />
+      </div>
+      <div className="flex-1 relative -mt-6">
         <WorkflowEditor 
           workflowId={workflowId} 
+          initialTitle={initialTitle}
+          initialDescription={initialDescription}
           initialNodes={initialNodes} 
           initialEdges={initialEdges} 
         />

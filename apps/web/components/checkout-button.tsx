@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { createSubscriptionCheckout } from '@/features/purchase/subscription-actions';
 import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
 
 interface CheckoutButtonProps {
   plan: string;
@@ -42,23 +43,35 @@ export function CheckoutButton({ plan, children, className = '', featured }: Che
   };
 
   return (
-    <button
+    <motion.button
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
       onClick={handleClick}
       disabled={loading}
-      className={`flex w-full items-center justify-center rounded-xl py-4 font-semibold transition-all ${
+      className={`relative flex w-full items-center justify-center rounded-xl py-4 font-semibold transition-colors overflow-hidden ${
         featured
           ? 'bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-lg disabled:opacity-50'
-          : 'border border-border bg-white hover:bg-muted disabled:opacity-50'
+          : 'border border-border bg-white hover:bg-slate-50 disabled:opacity-50'
       } ${className}`}
     >
-      {loading ? (
-        <span className="flex items-center gap-2">
-          <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-          Processando...
-        </span>
-      ) : (
-        children
+      {featured && (
+        <motion.div
+          className="absolute inset-0 z-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+          initial={{ x: '-100%' }}
+          whileHover={{ x: '100%' }}
+          transition={{ duration: 0.8, ease: 'easeInOut' }}
+        />
       )}
-    </button>
+      <span className="relative z-10 flex items-center justify-center gap-2">
+        {loading ? (
+          <>
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+            Processando...
+          </>
+        ) : (
+          children
+        )}
+      </span>
+    </motion.button>
   );
 }

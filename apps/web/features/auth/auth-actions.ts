@@ -12,7 +12,7 @@ export async function signUp(formData: FormData) {
   const password = formData.get('password') as string;
   const name = formData.get('name') as string;
 
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
@@ -22,6 +22,17 @@ export async function signUp(formData: FormData) {
 
   if (error) {
     return { error: error.message };
+  }
+
+  // Sincronizar o usuário com a tabela 'users' (Escudo SaaS)
+  if (data?.user) {
+    const db = (await import('@prompthub/database/src/client')).default;
+    const { users } = await import('@prompthub/database/src/schema/users');
+    await db.insert(users).values({
+      id: data.user.id,
+      email: email,
+      name: name,
+    }).onConflictDoNothing();
   }
 
   revalidatePath('/', 'layout');

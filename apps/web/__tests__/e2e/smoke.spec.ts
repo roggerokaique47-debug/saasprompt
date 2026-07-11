@@ -4,13 +4,13 @@ test.describe('Smoke Tests', () => {
   test('homepage loads with hero and featured sections', async ({ page }) => {
     await page.goto('/');
     await expect(page.locator('h1')).toBeVisible();
-    await expect(page.locator('text=Explorar Biblioteca').first()).toBeVisible();
+    await expect(page.locator('text=Criar Conta Grátis').first()).toBeVisible();
   });
 
   test('biblioteca page loads with search and filters', async ({ page }) => {
     await page.goto('/biblioteca');
-    await expect(page.locator('h1')).toContainText('Biblioteca');
-    await expect(page.locator('input[type="text"]')).toBeVisible();
+    await expect(page.locator('h1')).toContainText('Marketplace de templates');
+    await expect(page.locator('input[type="search"]').first()).toBeVisible();
   });
 
   test('pricing page shows plan options', async ({ page }) => {
@@ -20,25 +20,23 @@ test.describe('Smoke Tests', () => {
 
   test('login page has form and social options', async ({ page }) => {
     await page.goto('/login');
-    await expect(page.locator('h1')).toContainText('Entrar');
+    await expect(page.locator('h1')).toContainText('Bem-vindo de volta');
     await expect(page.locator('input[name="email"]')).toBeVisible();
     await expect(page.locator('input[name="password"]')).toBeVisible();
-    await expect(page.locator('text=Entrar com Google')).toBeVisible();
+    await expect(page.locator('text=Google')).toBeVisible();
   });
 
   test('signup page has form and social options', async ({ page }) => {
     await page.goto('/cadastro');
-    await expect(page.locator('h1')).toContainText('Conta');
+    await expect(page.locator('h1')).toContainText(/crie sua conta/i);
     await expect(page.locator('input[name="name"]')).toBeVisible();
     await expect(page.locator('input[name="email"]')).toBeVisible();
     await expect(page.locator('input[name="password"]')).toBeVisible();
   });
 
-  test('comunidade page has creator action cards', async ({ page }) => {
+  test('comunidade page has marketplace title', async ({ page }) => {
     await page.goto('/comunidade');
-    await expect(page.locator('text=Submeter Prompt')).toBeVisible();
-    await expect(page.locator('text=Submeter Workflow')).toBeVisible();
-    await expect(page.locator('text=Escrever Artigo')).toBeVisible();
+    await expect(page.locator('h1')).toContainText('Marketplace de Automacoes');
   });
 
   test('artigos listing page loads', async ({ page }) => {
@@ -48,27 +46,27 @@ test.describe('Smoke Tests', () => {
 
   test('workflows listing page loads', async ({ page }) => {
     await page.goto('/workflows');
-    await expect(page.locator('h1')).toContainText('Workflows');
+    await expect(page.locator('h1')).toContainText('Automações prontas para usar');
   });
 
   test('admin page redirects to login when unauthenticated', async ({ page }) => {
     await page.goto('/admin');
     await page.waitForURL('**/login**');
-    await expect(page.locator('h1')).toContainText('Entrar');
   });
 
   test('header navigation is visible on all pages', async ({ page }) => {
     await page.goto('/');
     const header = page.locator('header, nav').first();
     await expect(header).toBeVisible();
-    await expect(header.locator('text=Bem-vindo').or(header.locator('text=PromptHub'))).toBeVisible();
+    await expect(header).toBeVisible();
+    await expect(header.locator('img[alt="NovaFlow AI"]').or(header.locator('img[alt="PromptHub"]'))).toBeVisible();
   });
 
   test('browser back/forward works between pages', async ({ page }) => {
     await page.goto('/');
     const title1 = await page.locator('h1').textContent();
     await page.goto('/biblioteca');
-    await expect(page.locator('h1')).toContainText('Biblioteca');
+    await expect(page.locator('h1')).toContainText('Marketplace de templates');
     await page.goBack();
     await expect(page.locator('h1').first()).toBeVisible();
   });

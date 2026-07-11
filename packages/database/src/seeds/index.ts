@@ -9,6 +9,7 @@ import { users } from '../schema/users';
 import { prompts } from '../schema/prompts';
 import { articleCategories, articles } from '../schema/articles';
 import { workflowCategories, workflows } from '../schema/workflows';
+import { organizations } from '../schema/organizations';
 import { skillCategories, skills } from '../schema/skills';
 import { agentCategories, agents } from '../schema/agents';
 import { reviews } from '../schema/reviews';
@@ -62,6 +63,22 @@ async function seed() {
     await db.insert(creators).values(c).onConflictDoNothing();
   }
   console.log(`  ${creatorData.length} creators vinculados`);
+
+  // ─── ORGANIZATIONS ───────────────────────────────────────
+  const [defaultOrg] = await db.insert(organizations).values({
+    name: 'PromptHub HQ',
+    slug: 'prompthub-hq',
+    plan: 'enterprise',
+    ownerId: admin!.id,
+    credits: 9999,
+  }).onConflictDoNothing().returning();
+
+  let orgId = defaultOrg?.id;
+  if (!orgId) {
+    const [existing] = await db.select().from(organizations).where(eq(organizations.slug, 'prompthub-hq')).limit(1);
+    orgId = existing?.id;
+  }
+  console.log(`  Organization padrão garantida`);
 
   // ─── CATEGORIES ──────────────────────────────────────────
   const catData = [
@@ -398,6 +415,7 @@ async function seed() {
   for (const { categorySlug, ...w } of workflowData) {
     await db.insert(workflows).values({
       ...w,
+      organizationId: orgId!,
       categoryId: wcMap[categorySlug]?.id,
       tags: w.tags as [string, ...string[]],
     }).onConflictDoNothing();
@@ -417,6 +435,7 @@ async function seed() {
       workflowJson,
       categoryId: wcMap[ext.categorySlug]?.id,
       authorId: admin!.id,
+      organizationId: orgId!,
       isPublished: true,
       isPremium: ext.isPremium,
       priceCents: ext.priceCents,
@@ -507,6 +526,7 @@ async function seed() {
       platform: ext.platform as [string, ...string[]],
       categoryId: acMap2[ext.categorySlug]?.id,
       authorId: admin!.id,
+      organizationId: orgId!,
       isPublished: true,
       isPremium: ext.isPremium,
       priceCents: ext.priceCents,
@@ -571,6 +591,7 @@ async function seed() {
   // ─── PURCHASES ────────────────────────────────────────────
   await db.insert(purchases).values({
     userId: pedro!.id,
+    organizationId: orgId!,
     contentType: 'prompt',
     contentId: soldPrompt?.id ?? '00000000-0000-0000-0000-000000000000',
     amountCents: 1499,

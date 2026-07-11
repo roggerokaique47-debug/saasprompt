@@ -30,10 +30,10 @@ export class StripeProvider implements PaymentProvider {
       mode: 'subscription',
       payment_method_types: ['card'],
       line_items: [{ price: priceId, quantity: 1 }],
-      client_reference_id: params.userId,
+      client_reference_id: params.organizationId,
       success_url: params.successUrl,
       cancel_url: params.cancelUrl,
-      metadata: { userId: params.userId, plan: params.plan },
+      metadata: { organizationId: params.organizationId, plan: params.plan },
     });
     return session.url!;
   }
@@ -58,15 +58,15 @@ export class StripeProvider implements PaymentProvider {
       case 'checkout.session.completed': {
         const session = event.data.object as any;
         if (session.mode === 'subscription') {
-          const userId = session.metadata?.userId;
+          const organizationId = session.metadata?.organizationId;
           const plan = (session.metadata?.plan as PaymentPlan) || 'pro';
           const subId = session.subscription as string;
           
-          if (!userId || !subId) return null;
+          if (!organizationId || !subId) return null;
 
           const sub = (await this.stripe.subscriptions.retrieve(subId)) as any;
           return {
-            userId,
+            organizationId,
             action: 'ACTIVATE_SUBSCRIPTION',
             plan,
             subscriptionId: subId,
@@ -81,11 +81,11 @@ export class StripeProvider implements PaymentProvider {
       
       case 'customer.subscription.updated': {
         const sub = event.data.object as any;
-        const userId = sub.metadata?.userId;
-        if (!userId) return null;
+        const organizationId = sub.metadata?.organizationId;
+        if (!organizationId) return null;
         
         return {
-          userId,
+          organizationId,
           action: 'UPDATE_SUBSCRIPTION',
           subscriptionId: sub.id,
           status: sub.status,
@@ -97,11 +97,11 @@ export class StripeProvider implements PaymentProvider {
       
       case 'customer.subscription.deleted': {
         const sub = event.data.object as any;
-        const userId = sub.metadata?.userId;
-        if (!userId) return null;
+        const organizationId = sub.metadata?.organizationId;
+        if (!organizationId) return null;
 
         return {
-          userId,
+          organizationId,
           action: 'CANCEL_SUBSCRIPTION',
           subscriptionId: sub.id,
           status: 'canceled',
@@ -115,11 +115,11 @@ export class StripeProvider implements PaymentProvider {
         if (!subId) return null;
         
         const invoiceSub = (await this.stripe.subscriptions.retrieve(subId)) as any;
-        const userId = invoiceSub.metadata?.userId;
-        if (!userId) return null;
+        const organizationId = invoiceSub.metadata?.organizationId;
+        if (!organizationId) return null;
 
         return {
-          userId,
+          organizationId,
           action: 'PAYMENT_FAILED',
           subscriptionId: subId,
           status: 'past_due',

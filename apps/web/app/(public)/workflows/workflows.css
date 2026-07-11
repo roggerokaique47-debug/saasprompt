@@ -1,0 +1,23 @@
+.filter-bar { display:flex;gap:var(--gap-sm);flex-wrap:wrap;margin-bottom:var(--gap-xl);position:relative;z-index:1; }
+.filter-btn { padding:6px 16px;border-radius:var(--radius-full);font-size:13px;font-weight:500;border:1px solid var(--border);background:transparent;color:var(--muted);transition:all .2s;cursor:pointer; }
+.filter-btn:hover { border-color:var(--accent);color:var(--fg); }
+.filter-btn.active { background:var(--accent-soft);color:var(--accent);border-color:var(--accent); }
+.search-bar { display:flex;gap:var(--gap-sm);align-items:center;padding:8px 16px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);max-width:400px;margin-bottom:var(--gap-xl);transition:border-color .2s; }
+.search-bar:focus-within { border-color:var(--accent); }
+.search-bar input { flex:1;border:none;background:none;color:var(--fg);font-size:14px;outline:none; }
+.search-bar input::placeholder { color:var(--muted); }
+.wf-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:var(--gap-md);position:relative;z-index:1; }
+.wf-card { background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;transition:border-color .3s ease,transform .3s ease; }
+.wf-card:hover { border-color:color-mix(in oklch,var(--accent) 30%,var(--border));transform:translateY(-3px); }
+.wf-card-img { height:140px;background:var(--surface-alt);display:grid;place-items:center;position:relative;overflow:hidden; }
+.wf-card-img::before { content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 40%,var(--accent-soft),transparent 60%); }
+.wf-card-img span { position:relative;z-index:1;font-family:var(--font-mono);font-size:28px; }
+.wf-card-body { padding:20px; }
+.wf-tags { display:flex;gap:6px;flex-wrap:wrap;margin-bottom:var(--gap-sm); }
+.wf-tag { padding:2px 8px;border-radius:4px;background:var(--accent-soft);font-size:10px;font-family:var(--font-mono);color:var(--accent);letter-spacing:.04em;text-transform:uppercase; }
+.wf-card h3 { font-size:16px;margin-bottom:4px; font-weight:600; color:var(--fg); }
+.wf-card p { font-size:13px;color:var(--muted);margin:0 0 var(--gap-sm); }
+.wf-meta { display:flex;gap:var(--gap-md);font-size:12px;color:var(--muted);font-family:var(--font-mono); }
+.wf-card .btn { width:100%;justify-content:center;margin-top:var(--gap-sm); }
+@media(max-width:1000px){.wf-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){.wf-grid{grid-template-columns:1fr}.search-bar{max-width:100%}}

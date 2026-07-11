@@ -1,11 +1,17 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Inter, Lora } from 'next/font/google';
 // Imports removed
 import './globals.css';
+import Script from 'next/script';
 
 const inter = Inter({
   subsets: ['latin'],
   variable: '--font-sans',
+});
+
+const lora = Lora({
+  subsets: ['latin'],
+  variable: '--font-display',
 });
 
 export const metadata: Metadata = {
@@ -32,6 +38,7 @@ export const metadata: Metadata = {
 };
 
 import { ThemeProvider } from '@/components/theme-provider';
+import { FadeUpObserver } from '@/components/fade-up-observer';
 
 export default function RootLayout({
   children,
@@ -40,13 +47,19 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR" suppressHydrationWarning>
-      <body className={`${inter.variable} flex min-h-screen flex-col antialiased bg-background text-foreground`}>
+      <head>
+        {/* Script do PostHog usando next/script para evitar erros no React: */}
+        {/* <Script id="posthog" strategy="afterInteractive" dangerouslySetInnerHTML={{ __html: `!function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],...);}` }} /> */}
+      </head>
+      <body className={`${inter.variable} ${lora.variable} flex min-h-screen flex-col antialiased`} suppressHydrationWarning>
         <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
+          attribute="data-theme"
+          defaultTheme="original"
+          enableSystem={false}
+          themes={['original', 'claro', 'escuro']}
           disableTransitionOnChange
         >
+          <FadeUpObserver />
           {children}
         </ThemeProvider>
       </body>

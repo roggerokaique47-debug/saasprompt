@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 export default function LoginPage() {
   return (
     <main className="relative flex min-h-screen bg-slate-50 selection:bg-primary/20">
-      <div className="relative flex w-full flex-col justify-center px-6 lg:w-1/2 lg:px-12 xl:px-24">
+      <div className="relative flex w-full flex-col justify-center px-6 lg:w-1/2 lg:px-12 xl:px-24 text-slate-900">
         {/* Decorative background element on left side */}
         <div className="absolute left-0 top-0 -z-10 h-full w-full bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent" />
         

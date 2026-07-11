@@ -6,11 +6,11 @@ import {
   jsonb,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
-import { users } from './users';
+import { organizations } from './organizations';
 
 export const integrations = pgTable('integrations', {
   id: uuid('id').defaultRandom().primaryKey(),
-  userId: uuid('user_id').notNull(),
+  organizationId: uuid('organization_id').notNull(),
   provider: text('provider').notNull(), // ex: 'google', 'slack', 'shopify'
   providerAccountId: text('provider_account_id'),
   accessToken: text('access_token'),
@@ -22,8 +22,8 @@ export const integrations = pgTable('integrations', {
 });
 
 export const integrationsRelations = relations(integrations, ({ one }) => ({
-  user: one(users, {
-    fields: [integrations.userId],
-    references: [users.id],
+  organization: one(organizations, {
+    fields: [integrations.organizationId],
+    references: [organizations.id],
   }),
 }));

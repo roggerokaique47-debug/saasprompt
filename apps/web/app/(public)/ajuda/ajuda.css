@@ -1,0 +1,26 @@
+.help-tabs { display:flex;gap:var(--gap-sm);margin-bottom:var(--gap-xl);flex-wrap:wrap;justify-content:center; }
+.help-tab { padding:8px 20px;border-radius:var(--radius-full);font-size:14px;border:1px solid var(--border);background:transparent;color:var(--muted);transition:all .2s;cursor:pointer; }
+.help-tab:hover { border-color:var(--accent);color:var(--fg); }
+.help-tab.active { background:var(--accent-soft);color:var(--accent);border-color:var(--accent); }
+.help-panel { display:none; }
+.help-panel.active { display:block; }
+.faq-item { border-bottom:1px solid var(--border); }
+.faq-q { width:100%;display:flex;justify-content:space-between;align-items:center;padding:18px 0;text-align:left;font-size:15px;font-weight:500;color:var(--fg);background:none;cursor:pointer;transition:color .2s; border:none; }
+.faq-q:hover { color:var(--accent); }
+.faq-q::after { content:'+';font-size:18px;color:var(--muted);transition:transform .2s;flex-shrink:0;margin-left:12px; }
+.faq-item.open .faq-q::after { content:'−'; }
+.faq-a { max-height:0;overflow:hidden;transition:max-height .3s ease,padding .3s ease;padding:0;color:var(--muted);font-size:14px;line-height:1.65; }
+.faq-item.open .faq-a { max-height:400px;padding:0 0 18px; }
+.doc-list { display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:var(--gap-md); }
+.doc-card { background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;transition:border-color .3s;cursor:pointer; }
+.doc-card:hover { border-color:color-mix(in oklch,var(--accent) 30%,var(--border)); }
+.doc-card .doc-icon { font-size:24px;margin-bottom:var(--gap-sm); }
+.doc-card h3 { font-size:15px;margin-bottom:4px; font-weight:600; color:var(--fg); }
+.doc-card p { font-size:13px;color:var(--muted);margin:0; }
+.support-options { display:grid;grid-template-columns:repeat(3,1fr);gap:var(--gap-md);margin-bottom:var(--gap-xl); }
+.support-card { text-align:center;padding:28px 16px;background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius-lg); }
+.support-card .sc-icon { font-size:28px;margin-bottom:var(--gap-sm); }
+.support-card h3 { font-size:15px;margin-bottom:4px; font-weight:600; color:var(--fg); }
+.support-card p { font-size:13px;color:var(--muted);margin:0 0 var(--gap-sm); }
+.support-card .btn { width:100%;justify-content:center; }
+@media(max-width:920px){.support-options{grid-template-columns:1fr}}

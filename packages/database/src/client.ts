@@ -2,7 +2,9 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schema from './schema/index';
 
-let db: ReturnType<typeof drizzle>;
+import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
+
+let db: PostgresJsDatabase<typeof schema>;
 
 function thenable<T>(val: T): T & Promise<T> {
   return Object.assign(Promise.resolve(val), val as object) as T & Promise<T>;
